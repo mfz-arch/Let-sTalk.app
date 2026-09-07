@@ -31,7 +31,7 @@ class ChatService {
     senderId: string,
     receiverId: string,
     content: string,
-    type: 'text' | 'image' | 'story_reply' = 'text',
+    type: 'text' | 'image' | 'audio' | 'story_reply' = 'text',
     mediaUrl?: string,
     storyContext?: Message['storyContext']
   ): Promise<Message> {

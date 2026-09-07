@@ -35,7 +35,7 @@ export default function DirectChatPage() {
         conversation={activeConversation}
         messages={messages}
         isLoading={isLoadingMessages}
-        onSendMessage={(text, mediaUrl) => sendMessage(text, 'text', mediaUrl)}
+        onSendMessage={(text, mediaUrl, type) => sendMessage(text, type || (mediaUrl ? 'image' : 'text'), mediaUrl)}
         onBackMobile={() => router.push('/messages')}
       />
     </div>

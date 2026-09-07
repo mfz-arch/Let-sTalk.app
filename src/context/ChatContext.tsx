@@ -29,36 +29,70 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
-  const fetchConversations = useCallback(async () => {
+  const fetchConversations = useCallback(async (showLoading = true) => {
     if (!user) return;
-    setIsLoadingConversations(true);
+    if (showLoading) setIsLoadingConversations(true);
     try {
       const convs = await chatService.getConversations(user.id);
       setConversations(convs);
     } finally {
-      setIsLoadingConversations(false);
+      if (showLoading) setIsLoadingConversations(false);
     }
   }, [user]);
 
   useEffect(() => {
-    fetchConversations();
+    fetchConversations(true);
+
+    // Silent background poll for conversations every 4 seconds
+    const convInterval = setInterval(() => {
+      fetchConversations(false);
+    }, 4000);
+
+    return () => clearInterval(convInterval);
   }, [fetchConversations]);
 
+  // Fetch and poll messages for active conversation
   useEffect(() => {
-    if (activeConversation) {
-      setIsLoadingMessages(true);
-      chatService.getMessages(activeConversation.id).then((msgs) => {
+    if (!activeConversation) {
+      setMessages([]);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingMessages(true);
+
+    // Initial load
+    chatService.getMessages(activeConversation.id).then((msgs) => {
+      if (isMounted) {
         setMessages(msgs);
         setIsLoadingMessages(false);
-      });
-    } else {
-      setMessages([]);
-    }
+      }
+    });
+
+    // Silent poll every 2.5 seconds
+    const messageInterval = setInterval(async () => {
+      if (!activeConversation) return;
+      const latestMsgs = await chatService.getMessages(activeConversation.id);
+      if (isMounted && latestMsgs) {
+        setMessages((prev) => {
+          // Compare length or IDs to avoid unnecessary re-renders
+          if (latestMsgs.length !== prev.length || latestMsgs[latestMsgs.length - 1]?.id !== prev[prev.length - 1]?.id) {
+            return latestMsgs;
+          }
+          return prev;
+        });
+      }
+    }, 2500);
+
+    return () => {
+      isMounted = false;
+      clearInterval(messageInterval);
+    };
   }, [activeConversation]);
 
   const sendMessage = async (
     content: string,
-    type: 'text' | 'image' | 'story_reply' = 'text',
+    type: 'text' | 'image' | 'audio' | 'story_reply' = 'text',
     mediaUrl?: string,
     storyContext?: Message['storyContext']
   ) => {

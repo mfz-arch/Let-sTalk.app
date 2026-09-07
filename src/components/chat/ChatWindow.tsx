@@ -15,7 +15,7 @@ interface ChatWindowProps {
   conversation: Conversation;
   messages: Message[];
   isLoading?: boolean;
-  onSendMessage: (text: string, mediaUrl?: string) => Promise<void>;
+  onSendMessage: (text: string, mediaUrl?: string, type?: 'text' | 'image' | 'audio') => Promise<void>;
   onBackMobile?: () => void;
 }
 

@@ -1,7 +1,7 @@
 import { User } from './user';
 
 export type MessageStatus = 'sent' | 'delivered' | 'read';
-export type MessageType = 'text' | 'image' | 'story_reply';
+export type MessageType = 'text' | 'image' | 'audio' | 'story_reply';
 
 export interface Message {
   id: string;

@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { Send, Image as ImageIcon, Smile, X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Image as ImageIcon, Smile, X, Mic, Square, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 
 interface MessageInputProps {
-  onSend: (text: string, mediaUrl?: string) => Promise<void>;
+  onSend: (text: string, mediaUrl?: string, type?: 'text' | 'image' | 'audio') => Promise<void>;
   disabled?: boolean;
 }
 
@@ -17,6 +17,19 @@ export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = f
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Audio Recording State
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    };
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,13 +44,79 @@ export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = f
     }
   };
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingSeconds(0);
+
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingSeconds((prev) => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.error('Audio recording access error:', err);
+      alert('Unable to access microphone. Please check browser permissions.');
+    }
+  };
+
+  const stopAndCancelRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+    }
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+    setIsRecording(false);
+    setRecordingSeconds(0);
+    audioChunksRef.current = [];
+  };
+
+  const stopAndSendRecording = async () => {
+    if (!mediaRecorderRef.current || !isRecording) return;
+
+    mediaRecorderRef.current.onstop = async () => {
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const audioBase64 = reader.result as string;
+        if (audioBase64) {
+          setIsSending(true);
+          try {
+            await onSend('🎙️ Voice message', audioBase64, 'audio');
+          } finally {
+            setIsSending(false);
+          }
+        }
+      };
+      reader.readAsDataURL(audioBlob);
+
+      mediaRecorderRef.current?.stream.getTracks().forEach((track) => track.stop());
+      setIsRecording(false);
+      setRecordingSeconds(0);
+    };
+
+    mediaRecorderRef.current.stop();
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if ((!text.trim() && !mediaPreview) || isSending || disabled) return;
 
     setIsSending(true);
     try {
-      await onSend(text.trim(), mediaPreview || undefined);
+      const type = mediaPreview ? 'image' : 'text';
+      await onSend(text.trim(), mediaPreview || undefined, type);
       setText('');
       setMediaPreview(null);
       setShowEmojiPicker(false);
@@ -50,10 +129,16 @@ export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = f
     setText((prev) => prev + emoji);
   };
 
+  const formatTimer = (sec: number) => {
+    const mins = Math.floor(sec / 60);
+    const remainingSecs = sec % 60;
+    return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="relative p-3 glass-panel border-t border-zinc-800">
       {/* Emoji Quick Picker Dropdown */}
-      {showEmojiPicker && (
+      {showEmojiPicker && !isRecording && (
         <div className="absolute bottom-full left-4 mb-2 p-2.5 glass-panel rounded-2xl border border-zinc-800 shadow-2xl flex items-center space-x-2 z-20">
           {EMOJI_LIST.map((emoji) => (
             <button
@@ -69,7 +154,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = f
       )}
 
       {/* Media Attachment Preview Box */}
-      {mediaPreview && (
+      {mediaPreview && !isRecording && (
         <div className="mb-2 relative inline-block">
           <div className="w-20 h-20 rounded-xl overflow-hidden border border-zinc-700 relative">
             <Image src={mediaPreview} alt="Preview" fill className="object-cover" unoptimized />
@@ -84,56 +169,101 @@ export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = f
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex items-center space-x-2">
-        {/* Attachment Button */}
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="p-2.5 text-zinc-400 hover:text-indigo-400 hover:bg-zinc-800/60 rounded-xl transition-colors"
-          title="Attach Photo"
-        >
-          <ImageIcon className="w-5 h-5" />
-        </button>
+      {/* Live Recording Controls Bar */}
+      {isRecording ? (
+        <div className="flex items-center justify-between bg-zinc-900 border border-rose-500/40 rounded-2xl px-4 py-2.5 shadow-lg">
+          <div className="flex items-center space-x-3">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+            </span>
+            <span className="text-xs font-semibold text-rose-400 uppercase tracking-wider">
+              Recording {formatTimer(recordingSeconds)}
+            </span>
+          </div>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="hidden"
-        />
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={stopAndCancelRecording}
+              className="p-2 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-xl transition-colors"
+              title="Cancel recording"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={stopAndSendRecording}
+              disabled={isSending}
+              className="p-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl shadow-md hover:from-indigo-500 hover:to-violet-500 transition-all flex items-center space-x-1"
+              title="Send voice message"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="flex items-center space-x-2">
+          {/* Attachment Button */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-2.5 text-zinc-400 hover:text-indigo-400 hover:bg-zinc-800/60 rounded-xl transition-colors"
+            title="Attach Photo"
+          >
+            <ImageIcon className="w-5 h-5" />
+          </button>
 
-        {/* Emoji Button */}
-        <button
-          type="button"
-          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          className={`p-2.5 rounded-xl transition-colors ${
-            showEmojiPicker ? 'text-amber-400 bg-amber-400/10' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-          }`}
-          title="Emojis"
-        >
-          <Smile className="w-5 h-5" />
-        </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
+          />
 
-        {/* Main Text Input */}
-        <input
-          type="text"
-          placeholder="Write a message..."
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          disabled={disabled}
-          className="flex-1 glass-input px-4 py-2.5 rounded-2xl text-sm text-zinc-100 placeholder-zinc-500 outline-none border border-zinc-800 focus:border-indigo-500"
-        />
+          {/* Emoji Button */}
+          <button
+            type="button"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className={`p-2.5 rounded-xl transition-colors ${
+              showEmojiPicker ? 'text-amber-400 bg-amber-400/10' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+            }`}
+            title="Emojis"
+          >
+            <Smile className="w-5 h-5" />
+          </button>
 
-        {/* Send Button */}
-        <button
-          type="submit"
-          disabled={(!text.trim() && !mediaPreview) || isSending || disabled}
-          className="p-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-2xl shadow-lg shadow-indigo-600/25 transition-all transform active:scale-95 flex-shrink-0"
-        >
-          <Send className="w-4 h-4" />
-        </button>
-      </form>
+          {/* Voice Record Mic Button */}
+          <button
+            type="button"
+            onClick={startRecording}
+            className="p-2.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800/60 rounded-xl transition-colors"
+            title="Record Voice Message"
+          >
+            <Mic className="w-5 h-5" />
+          </button>
+
+          {/* Main Text Input */}
+          <input
+            type="text"
+            placeholder="Write a message..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            disabled={disabled}
+            className="flex-1 glass-input px-4 py-2.5 rounded-2xl text-sm text-zinc-100 placeholder-zinc-500 outline-none border border-zinc-800 focus:border-indigo-500"
+          />
+
+          {/* Send Button */}
+          <button
+            type="submit"
+            disabled={(!text.trim() && !mediaPreview) || isSending || disabled}
+            className="p-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-2xl shadow-lg shadow-indigo-600/25 transition-all transform active:scale-95 flex-shrink-0"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </form>
+      )}
     </div>
   );
 };

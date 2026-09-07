@@ -5,7 +5,7 @@ export interface IMessage extends Document {
   senderId: mongoose.Types.ObjectId;
   receiverId: mongoose.Types.ObjectId;
   content: string;
-  type: 'text' | 'image' | 'story_reply';
+  type: 'text' | 'image' | 'audio' | 'story_reply';
   mediaUrl?: string;
   storyContext?: {
     storyId: string;
@@ -21,7 +21,7 @@ const MessageSchema = new Schema(
     senderId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     receiverId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     content: { type: String, default: '' },
-    type: { type: String, enum: ['text', 'image', 'story_reply'], default: 'text' },
+    type: { type: String, enum: ['text', 'image', 'audio', 'story_reply'], default: 'text' },
     mediaUrl: { type: String },
     storyContext: {
       storyId: { type: String },
