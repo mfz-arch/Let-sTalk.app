@@ -26,24 +26,31 @@ export const GlobalCallOverlay: React.FC = () => {
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Attach local media stream
-  useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
+  // Attach local stream to video element
+  const setLocalVideoNode = (node: HTMLVideoElement | null) => {
+    localVideoRef.current = node;
+    if (node && localStream) {
+      node.srcObject = localStream;
+      node.play().catch(console.error);
     }
-  }, [localStream]);
+  };
 
-  // Attach remote media stream
-  useEffect(() => {
-    if (remoteStream) {
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStream;
-      }
-      if (remoteAudioRef.current) {
-        remoteAudioRef.current.srcObject = remoteStream;
-      }
+  // Attach remote stream to video & audio elements
+  const setRemoteVideoNode = (node: HTMLVideoElement | null) => {
+    remoteVideoRef.current = node;
+    if (node && remoteStream) {
+      node.srcObject = remoteStream;
+      node.play().catch(console.error);
     }
-  }, [remoteStream]);
+  };
+
+  const setRemoteAudioNode = (node: HTMLAudioElement | null) => {
+    remoteAudioRef.current = node;
+    if (node && remoteStream) {
+      node.srcObject = remoteStream;
+      node.play().catch(console.error);
+    }
+  };
 
   if (!activeCall) return null;
 
@@ -66,8 +73,8 @@ export const GlobalCallOverlay: React.FC = () => {
           className="fixed inset-0 bg-black/90 backdrop-blur-md"
         />
 
-        {/* Hidden Audio element for remote audio stream during voice call */}
-        <audio ref={remoteAudioRef} autoPlay />
+        {/* Audio element for remote audio stream during voice/video call */}
+        <audio ref={setRemoteAudioNode} autoPlay playsInline className="hidden" />
 
         {/* INCOMING CALL MODAL (For Receiver when Ringing) */}
         {callRole === 'receiver' && activeCall.status === 'ringing' ? (
@@ -137,12 +144,14 @@ export const GlobalCallOverlay: React.FC = () => {
             className="relative z-10 w-full max-w-sm h-[520px] glass-panel rounded-3xl overflow-hidden shadow-2xl border border-zinc-800 flex flex-col justify-between p-6 text-center"
           >
             {/* Real-time Video Canvas background if Video Call */}
-            {isVideo && remoteStream && (
+            {isVideo && (
               <video
-                ref={remoteVideoRef}
+                ref={setRemoteVideoNode}
                 autoPlay
                 playsInline
-                className="absolute inset-0 w-full h-full object-cover z-0 rounded-3xl"
+                className={`absolute inset-0 w-full h-full object-cover z-0 rounded-3xl transition-opacity duration-300 ${
+                  remoteStream ? 'opacity-100' : 'opacity-0'
+                }`}
               />
             )}
 
@@ -150,7 +159,7 @@ export const GlobalCallOverlay: React.FC = () => {
             {isVideo && localStream && (
               <div className="absolute top-4 right-4 w-28 h-36 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl z-20 bg-zinc-900">
                 <video
-                  ref={localVideoRef}
+                  ref={setLocalVideoNode}
                   autoPlay
                   playsInline
                   muted
@@ -197,7 +206,7 @@ export const GlobalCallOverlay: React.FC = () => {
                 <div>
                   <h3 className="text-xl font-extrabold text-white">{activeCall.callerName}</h3>
                   <p className="text-xs text-zinc-400">
-                    {activeCall.status === 'ringing' ? 'Ringing...' : 'Connected (Zero Latency)'}
+                    {activeCall.status === 'ringing' ? 'Ringing...' : 'Connected'}
                   </p>
                 </div>
               </div>

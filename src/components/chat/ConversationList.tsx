@@ -3,6 +3,7 @@
 import React from 'react';
 import { Conversation } from '../../types/chat';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 import { Avatar } from '../common/Avatar';
 import { ConversationSkeleton } from '../common/Skeleton';
 import { MessageSquarePlus } from 'lucide-react';
@@ -22,6 +23,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   isLoading = false,
 }) => {
   const { user } = useAuth();
+  const { onlineUsers } = useSocket();
 
   if (isLoading) {
     return (
@@ -61,6 +63,9 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         const otherParticipant = conv.participants.find((p) => p.id !== user?.id) || conv.participants[0];
         const isActive = activeId === conv.id;
         const lastMsg = conv.lastMessage;
+        
+        // Determine real-time online status
+        const isOnline = onlineUsers.has(otherParticipant?.id) || otherParticipant?.onlineStatus === 'online';
 
         return (
           <div
@@ -77,7 +82,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               alt={otherParticipant?.name || 'User'}
               size="md"
               showStatus
-              onlineStatus={otherParticipant?.onlineStatus}
+              onlineStatus={isOnline ? 'online' : 'offline'}
             />
 
             <div className="flex-1 min-w-0">

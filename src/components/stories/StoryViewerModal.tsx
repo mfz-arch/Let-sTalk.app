@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { X, ChevronLeft, ChevronRight, Send, Eye } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Send, Eye, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStories } from '../../context/StoryContext';
 import { useChat } from '../../context/ChatContext';
@@ -18,23 +18,27 @@ export const StoryViewerModal: React.FC = () => {
     closeStoryViewer,
     nextSlide,
     prevSlide,
+    toggleLikeStory,
   } = useStories();
 
   const { startConversationWithUser, sendMessage, setActiveConversation } = useChat();
   const [replyText, setReplyText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [showViewersList, setShowViewersList] = useState(false);
 
   const currentSlide = activeStoryGroup?.slides[activeSlideIndex];
+  const isMyStory = activeStoryGroup?.userId === user?.id;
+  const isLiked = currentSlide?.likes?.includes(user?.id || '');
 
-  // Auto advance slide every 5 seconds unless paused
+  // Auto advance slide every 5 seconds unless paused or viewers modal is open
   useEffect(() => {
-    if (!isViewerOpen || isPaused || !currentSlide) return;
+    if (!isViewerOpen || isPaused || showViewersList || !currentSlide) return;
     const timer = setTimeout(() => {
       nextSlide();
     }, 5000);
     return () => clearTimeout(timer);
-  }, [isViewerOpen, isPaused, activeSlideIndex, activeStoryGroup, currentSlide, nextSlide]);
+  }, [isViewerOpen, isPaused, showViewersList, activeSlideIndex, activeStoryGroup, currentSlide, nextSlide]);
 
   if (!isViewerOpen || !activeStoryGroup || !currentSlide) return null;
 
@@ -44,11 +48,9 @@ export const StoryViewerModal: React.FC = () => {
 
     setIsSending(true);
     try {
-      // Create conversation with story owner if not exists
       const conv = await startConversationWithUser(activeStoryGroup.userId);
       setActiveConversation(conv);
 
-      // Send story reply message
       await sendMessage(
         replyText,
         'story_reply',
@@ -70,32 +72,27 @@ export const StoryViewerModal: React.FC = () => {
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md">
         {/* Backdrop dismiss */}
-        <div
-          className="absolute inset-0"
-          onClick={closeStoryViewer}
-        />
+        <div className="absolute inset-0" onClick={closeStoryViewer} />
 
         {/* Story Viewer Card */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="relative z-10 w-full max-w-sm h-[85vh] max-h-[700px] bg-zinc-950 rounded-3xl overflow-hidden shadow-2xl border border-zinc-800 flex flex-col justify-between"
+          className="relative z-10 w-full max-w-sm h-[85vh] max-h-[720px] bg-zinc-950 rounded-3xl overflow-hidden shadow-2xl border border-zinc-800 flex flex-col justify-between"
           onMouseDown={() => setIsPaused(true)}
           onMouseUp={() => setIsPaused(false)}
           onTouchStart={() => setIsPaused(true)}
           onTouchEnd={() => setIsPaused(false)}
         >
-          {/* Background Story Image */}
-          <div className="absolute inset-0 z-0">
-            <Image
+          {/* Background High-Res Story Image */}
+          <div className="absolute inset-0 z-0 bg-zinc-900 flex items-center justify-center">
+            <img
               src={currentSlide.mediaUrl}
               alt={currentSlide.caption || 'Story slide'}
-              fill
-              className="object-cover"
-              unoptimized
+              className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/80" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none" />
           </div>
 
           {/* Story Header */}
@@ -111,8 +108,10 @@ export const StoryViewerModal: React.FC = () => {
                     className={`h-full bg-white transition-all duration-200 ${
                       idx < activeSlideIndex
                         ? 'w-full'
-                        : idx === activeSlideIndex
+                        : idx === activeSlideIndex && !isPaused && !showViewersList
                         ? 'w-full animate-pulse'
+                        : idx === activeSlideIndex
+                        ? 'w-full'
                         : 'w-0'
                     }`}
                   />
@@ -139,16 +138,19 @@ export const StoryViewerModal: React.FC = () => {
               </div>
 
               <div className="flex items-center space-x-2">
-                {activeStoryGroup.userId === user?.id && (
-                  <div className="flex items-center space-x-1 text-xs text-white/80 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full">
+                {isMyStory && (
+                  <button
+                    onClick={() => setShowViewersList(!showViewersList)}
+                    className="flex items-center space-x-1 text-xs text-white bg-black/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 hover:bg-black/70 transition-colors"
+                  >
                     <Eye className="w-3.5 h-3.5" />
-                    <span>{currentSlide.viewsCount}</span>
-                  </div>
+                    <span>{currentSlide.viewsCount || 1}</span>
+                  </button>
                 )}
 
                 <button
                   onClick={closeStoryViewer}
-                  className="p-1.5 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 transition-colors"
+                  className="p-1.5 rounded-full bg-black/50 backdrop-blur-md text-white hover:bg-black/70 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -156,7 +158,7 @@ export const StoryViewerModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Navigation Click Target overlays */}
+          {/* Navigation Target Overlays */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -177,34 +179,92 @@ export const StoryViewerModal: React.FC = () => {
             <ChevronRight className="w-6 h-6" />
           </button>
 
-          {/* Story Caption & Quick Reply Input */}
+          {/* Story Caption & Action Form */}
           <div className="relative z-10 p-4 space-y-3 mt-auto">
             {currentSlide.caption && (
-              <p className="text-sm font-medium text-white text-center drop-shadow-md px-2 bg-black/30 backdrop-blur-md py-2 rounded-xl border border-white/10">
+              <p className="text-sm font-medium text-white text-center drop-shadow-md px-3 bg-black/50 backdrop-blur-md py-2.5 rounded-2xl border border-white/10">
                 {currentSlide.caption}
               </p>
             )}
 
-            {/* Quick Reply Form (only for other users' stories) */}
-            {activeStoryGroup.userId !== user?.id && (
-              <form onSubmit={handleSendReply} className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  placeholder={`Reply to ${activeStoryGroup.user.name.split(' ')[0]}...`}
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  className="flex-1 bg-black/50 backdrop-blur-md border border-white/20 rounded-full px-4 py-2.5 text-xs text-white placeholder-white/60 outline-none focus:border-indigo-400"
-                />
-                <button
-                  type="submit"
-                  disabled={!replyText.trim() || isSending}
-                  className="p-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-full transition-colors shadow-lg"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </form>
-            )}
+            {/* Like Heart & Quick Reply Form */}
+            <div className="flex items-center space-x-2">
+              {!isMyStory && (
+                <form onSubmit={handleSendReply} className="flex-1 flex items-center space-x-2">
+                  <input
+                    type="text"
+                    placeholder={`Reply to ${activeStoryGroup.user.name.split(' ')[0]}...`}
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    className="flex-1 bg-black/60 backdrop-blur-md border border-white/20 rounded-full px-4 py-2.5 text-xs text-white placeholder-white/60 outline-none focus:border-indigo-400"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!replyText.trim() || isSending}
+                    className="p-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-full transition-colors shadow-lg"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </form>
+              )}
+
+              {/* Heart Like Button */}
+              <button
+                type="button"
+                onClick={() => toggleLikeStory(currentSlide.id)}
+                className={`p-2.5 rounded-full backdrop-blur-md border transition-transform active:scale-90 ${
+                  isLiked
+                    ? 'bg-rose-600 text-white border-rose-500 shadow-lg shadow-rose-600/30'
+                    : 'bg-black/50 text-white/80 border-white/20 hover:text-white'
+                }`}
+                title={isLiked ? 'Unlike Story' : 'Like Story'}
+              >
+                <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+              </button>
+            </div>
           </div>
+
+          {/* STORY VIEWERS & LIKES MODAL */}
+          {showViewersList && (
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              className="absolute inset-x-0 bottom-0 z-30 bg-zinc-900/95 backdrop-blur-xl rounded-t-3xl p-5 border-t border-zinc-800 space-y-4 max-h-[60%]"
+            >
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <div className="flex items-center space-x-2">
+                  <Eye className="w-4 h-4 text-indigo-400" />
+                  <h3 className="text-sm font-bold text-white">Story Views & Likes</h3>
+                </div>
+                <button
+                  onClick={() => setShowViewersList(false)}
+                  className="p-1 text-zinc-400 hover:text-white rounded-full"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3 overflow-y-auto max-h-48">
+                <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-800/60">
+                  <div className="flex items-center space-x-3">
+                    <Avatar src={user?.avatar || ''} alt={user?.name || ''} size="sm" />
+                    <div>
+                      <p className="text-xs font-semibold text-white">{user?.name} (You)</p>
+                      <p className="text-[10px] text-zinc-400">Viewed just now</p>
+                    </div>
+                  </div>
+                  {isLiked && <Heart className="w-4 h-4 text-rose-500 fill-current" />}
+                </div>
+
+                {currentSlide.likes && currentSlide.likes.length > 0 && (
+                  <div className="text-[11px] text-rose-400 font-semibold pt-1">
+                    ❤️ {currentSlide.likes.length} people liked this story
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
         </motion.div>
       </div>
     </AnimatePresence>

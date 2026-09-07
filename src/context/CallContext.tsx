@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User } from '../types/user';
 import { useAuth } from './AuthContext';
+import { chatService } from '../services/chatService';
 
 interface ActiveCallData {
   id: string;
@@ -55,6 +56,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
   const durationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const processedCandidatesRef = useRef<Set<string>>(new Set());
 
   // Clean up streams & peer connection
   const cleanupCallState = useCallback(() => {
@@ -72,6 +74,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCallSeconds(0);
     setIsMuted(false);
     setIsVideoOff(false);
+    processedCandidatesRef.current.clear();
 
     if (durationTimerRef.current) {
       clearInterval(durationTimerRef.current);
@@ -95,7 +98,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [activeCall?.status]);
 
-  // Global listener for incoming calls or answer status updates
+  // Global listener for incoming calls or answer status updates + ICE candidates
   useEffect(() => {
     if (!user) return;
 
@@ -114,6 +117,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!res.ok) return;
         const data = await res.json();
         const call: ActiveCallData | null = data.activeCall;
+        const remoteCandidates: any[] = data.remoteCandidates || [];
 
         if (call) {
           // 1. Incoming Call received
@@ -130,12 +134,26 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           }
 
-          // 3. Call ended or declined by other side
+          // 3. Process remote ICE candidates for zero-latency WebRTC media stream
+          if (peerConnectionRef.current && remoteCandidates.length > 0) {
+            for (const candidate of remoteCandidates) {
+              const candStr = JSON.stringify(candidate);
+              if (!processedCandidatesRef.current.has(candStr)) {
+                processedCandidatesRef.current.add(candStr);
+                try {
+                  await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+                } catch (candErr) {
+                  console.error('Add ICE Candidate Error:', candErr);
+                }
+              }
+            }
+          }
+
+          // 4. Call ended or declined by other side
           if (activeCall && (call.status === 'ended' || call.status === 'declined')) {
             cleanupCallState();
           }
         } else if (activeCall && activeCall.status !== 'ringing') {
-          // Call no longer exists on server
           cleanupCallState();
         }
       } catch (err) {
@@ -155,10 +173,10 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
 
     try {
-      // 1. Get media stream
+      // 1. Get local media stream (audio + video if video call)
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
-        video: callType === 'video',
+        video: callType === 'video' ? { width: { ideal: 1280 }, height: { ideal: 720 } } : false,
       });
       setLocalStream(stream);
 
@@ -169,10 +187,16 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Add local tracks to peer connection
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
-      // Handle remote stream tracks
+      // Handle incoming remote media tracks
       pc.ontrack = (event) => {
         if (event.streams && event.streams[0]) {
           setRemoteStream(event.streams[0]);
+        } else {
+          setRemoteStream((prev) => {
+            const newStream = prev || new MediaStream();
+            newStream.addTrack(event.track);
+            return newStream;
+          });
         }
       };
 
@@ -200,7 +224,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setActiveCall(data.call);
         setCallRole('caller');
 
-        // Handle ICE candidates
+        // Send local ICE candidates to server
         pc.onicecandidate = (event) => {
           if (event.candidate) {
             fetch('/api/calls/signal', {
@@ -231,7 +255,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 1. Get local media stream
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
-        video: activeCall.callType === 'video',
+        video: activeCall.callType === 'video' ? { width: { ideal: 1280 }, height: { ideal: 720 } } : false,
       });
       setLocalStream(stream);
 
@@ -244,6 +268,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       pc.ontrack = (event) => {
         if (event.streams && event.streams[0]) {
           setRemoteStream(event.streams[0]);
+        } else {
+          setRemoteStream((prev) => {
+            const newStream = prev || new MediaStream();
+            newStream.addTrack(event.track);
+            return newStream;
+          });
         }
       };
 
@@ -291,9 +321,33 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Log call history to chat
+  const logCallToChat = async (statusText: string) => {
+    if (!user || !activeCall) return;
+    try {
+      const conv = await chatService.getOrCreateConversation(
+        user.id,
+        callRole === 'caller' ? activeCall.receiverId : activeCall.callerId,
+        user
+      );
+      if (conv) {
+        await chatService.sendMessage(
+          conv.id,
+          user.id,
+          callRole === 'caller' ? activeCall.receiverId : activeCall.callerId,
+          statusText,
+          'text'
+        );
+      }
+    } catch (err) {
+      console.error('Log Call Error:', err);
+    }
+  };
+
   // DECLINE CALL
   const declineCall = async () => {
     if (activeCall) {
+      logCallToChat(`📵 Missed ${activeCall.callType === 'video' ? 'Video' : 'Voice'} Call`);
       fetch('/api/calls/signal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -309,6 +363,11 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // END CALL
   const endCall = async () => {
     if (activeCall) {
+      const formatMin = Math.floor(callSeconds / 60);
+      const formatSec = callSeconds % 60;
+      const durationStr = `${formatMin}:${formatSec.toString().padStart(2, '0')}`;
+      logCallToChat(`📞 ${activeCall.callType === 'video' ? 'Video' : 'Voice'} Call (${durationStr})`);
+
       fetch('/api/calls/signal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

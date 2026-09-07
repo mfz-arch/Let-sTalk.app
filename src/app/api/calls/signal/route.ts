@@ -66,13 +66,24 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: 'User ID required' }, { status: 400 });
       }
 
-      // Check if user is receiver of a ringing call
+      // Check if user is receiver of a ringing call or participant in active call
       for (const call of activeCalls.values()) {
-        if (call.receiverId === userId && call.status === 'ringing') {
-          return NextResponse.json({ activeCall: call, role: 'receiver' });
+        const isCaller = call.callerId === userId;
+        const isReceiver = call.receiverId === userId;
+
+        if (isReceiver && call.status === 'ringing') {
+          return NextResponse.json({
+            activeCall: call,
+            role: 'receiver',
+            remoteCandidates: call.callerCandidates,
+          });
         }
-        if ((call.callerId === userId || call.receiverId === userId) && callId && call.id === callId) {
-          return NextResponse.json({ activeCall: call, role: call.callerId === userId ? 'caller' : 'receiver' });
+        if ((isCaller || isReceiver) && callId && call.id === callId) {
+          return NextResponse.json({
+            activeCall: call,
+            role: isCaller ? 'caller' : 'receiver',
+            remoteCandidates: isCaller ? call.receiverCandidates : call.callerCandidates,
+          });
         }
       }
 

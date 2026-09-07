@@ -7,6 +7,9 @@ export interface StorySlide {
   type: 'image' | 'video';
   createdAt: string;
   viewsCount: number;
+  likesCount?: number;
+  likes?: string[];
+  viewers?: { userId: string; name: string; avatar?: string }[];
 }
 
 export interface UserStoryGroup {

@@ -19,6 +19,7 @@ interface StoryContextType {
   openStoryCreator: () => void;
   closeStoryCreator: () => void;
   addStory: (mediaUrl: string, caption?: string) => Promise<void>;
+  toggleLikeStory: (storyId: string) => void;
 }
 
 const StoryContext = createContext<StoryContextType | undefined>(undefined);
@@ -64,7 +65,6 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (activeSlideIndex < activeStoryGroup.slides.length - 1) {
       setActiveSlideIndex((prev) => prev + 1);
     } else {
-      // Find next story group
       const currentGroupIndex = stories.findIndex((s) => s.userId === activeStoryGroup.userId);
       if (currentGroupIndex !== -1 && currentGroupIndex < stories.length - 1) {
         const nextGroup = stories[currentGroupIndex + 1];
@@ -80,7 +80,6 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (activeSlideIndex > 0) {
       setActiveSlideIndex((prev) => prev - 1);
     } else {
-      // Find prev story group
       const currentGroupIndex = stories.findIndex((s) => s.userId === activeStoryGroup.userId);
       if (currentGroupIndex > 0) {
         const prevGroup = stories[currentGroupIndex - 1];
@@ -101,6 +100,30 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     closeStoryCreator();
   };
 
+  const toggleLikeStory = (storyId: string) => {
+    if (!user || !activeStoryGroup) return;
+
+    setActiveStoryGroup((prevGroup) => {
+      if (!prevGroup) return null;
+      const updatedSlides = prevGroup.slides.map((slide) => {
+        if (slide.id === storyId) {
+          const currentLikes = slide.likes || [];
+          const hasLiked = currentLikes.includes(user.id);
+          const newLikes = hasLiked
+            ? currentLikes.filter((id) => id !== user.id)
+            : [...currentLikes, user.id];
+          return {
+            ...slide,
+            likes: newLikes,
+            likesCount: newLikes.length,
+          };
+        }
+        return slide;
+      });
+      return { ...prevGroup, slides: updatedSlides };
+    });
+  };
+
   return (
     <StoryContext.Provider
       value={{
@@ -117,6 +140,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         openStoryCreator,
         closeStoryCreator,
         addStory,
+        toggleLikeStory,
       }}
     >
       {children}

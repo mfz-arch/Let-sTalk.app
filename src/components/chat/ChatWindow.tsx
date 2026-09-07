@@ -10,6 +10,7 @@ import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { ChatMessageSkeleton } from '../common/Skeleton';
 import { useCall } from '../../context/CallContext';
+import { useSocket } from '../../context/SocketContext';
 
 interface ChatWindowProps {
   conversation: Conversation;
@@ -28,10 +29,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 }) => {
   const { user } = useAuth();
   const { initiateCall } = useCall();
+  const { onlineUsers } = useSocket();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const otherParticipant =
     conversation.participants.find((p) => p.id !== user?.id) || conversation.participants[0];
+
+  const isOnline = onlineUsers.has(otherParticipant?.id) || otherParticipant?.onlineStatus === 'online';
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -57,7 +61,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
               alt={otherParticipant?.name || 'User'}
               size="md"
               showStatus
-              onlineStatus={otherParticipant?.onlineStatus}
+              onlineStatus={isOnline ? 'online' : 'offline'}
             />
 
             <div>
@@ -65,7 +69,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 {otherParticipant?.name}
               </h3>
               <p className="text-[11px] text-zinc-400">
-                {otherParticipant?.onlineStatus === 'online' ? (
+                {isOnline ? (
                   <span className="text-emerald-400 font-medium">Online</span>
                 ) : (
                   <span>Last seen {otherParticipant?.lastSeen || 'recently'}</span>
