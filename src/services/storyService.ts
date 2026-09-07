@@ -1,17 +1,30 @@
 import { UserStoryGroup, StorySlide } from '../types/story';
 import { User } from '../types/user';
-import { INITIAL_STORIES } from '../data/mockData';
 
 class StoryService {
-  private stories: UserStoryGroup[] = [...INITIAL_STORIES];
+  private getStoredStories(): UserStoryGroup[] {
+    if (typeof window === 'undefined') return [];
+    const str = localStorage.getItem('letstalk_stories');
+    if (!str) return [];
+    try {
+      return JSON.parse(str);
+    } catch {
+      return [];
+    }
+  }
+
+  private saveStories(stories: UserStoryGroup[]): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('letstalk_stories', JSON.stringify(stories));
+  }
 
   async getStories(): Promise<UserStoryGroup[]> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return this.stories;
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    return this.getStoredStories();
   }
 
   async addStory(currentUser: User, mediaUrl: string, caption?: string): Promise<UserStoryGroup> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     const newSlide: StorySlide = {
       id: `st_${Date.now()}`,
@@ -22,15 +35,18 @@ class StoryService {
       viewsCount: 1,
     };
 
-    const existingGroupIndex = this.stories.findIndex((s) => s.userId === currentUser.id);
+    const stories = this.getStoredStories();
+    const existingGroupIndex = stories.findIndex((s) => s.userId === currentUser.id);
 
     if (existingGroupIndex !== -1) {
       const updatedGroup = {
-        ...this.stories[existingGroupIndex],
-        slides: [newSlide, ...this.stories[existingGroupIndex].slides],
+        ...stories[existingGroupIndex],
+        user: currentUser,
+        slides: [newSlide, ...stories[existingGroupIndex].slides],
         updatedAt: newSlide.createdAt,
       };
-      this.stories[existingGroupIndex] = updatedGroup;
+      stories[existingGroupIndex] = updatedGroup;
+      this.saveStories(stories);
       return updatedGroup;
     } else {
       const newGroup: UserStoryGroup = {
@@ -40,15 +56,18 @@ class StoryService {
         updatedAt: newSlide.createdAt,
         slides: [newSlide],
       };
-      this.stories.unshift(newGroup);
+      stories.unshift(newGroup);
+      this.saveStories(stories);
       return newGroup;
     }
   }
 
   async markStorySeen(userId: string): Promise<void> {
-    const idx = this.stories.findIndex((s) => s.userId === userId);
+    const stories = this.getStoredStories();
+    const idx = stories.findIndex((s) => s.userId === userId);
     if (idx !== -1) {
-      this.stories[idx].hasUnseen = false;
+      stories[idx].hasUnseen = false;
+      this.saveStories(stories);
     }
   }
 }

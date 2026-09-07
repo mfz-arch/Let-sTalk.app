@@ -87,7 +87,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               label="Full Name"
-              placeholder="e.g. Sarah Jenkins"
+              placeholder="e.g. Zalifa Ahmed"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               leftIcon={<User className="w-4 h-4 text-zinc-500" />}
@@ -108,7 +108,7 @@ export default function RegisterPage() {
                 <div className="flex-1">
                   <Input
                     type="tel"
-                    placeholder="Enter phone number"
+                    placeholder="e.g. 712509403"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     leftIcon={<Phone className="w-4 h-4 text-zinc-500" />}
@@ -121,7 +121,7 @@ export default function RegisterPage() {
 
             <Input
               label="Password"
-              type="password"
+              isPassword
               placeholder="At least 6 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -132,7 +132,7 @@ export default function RegisterPage() {
 
             <Input
               label="Confirm Password"
-              type="password"
+              isPassword
               placeholder="Re-enter your password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}

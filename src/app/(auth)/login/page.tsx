@@ -14,8 +14,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
-  const [phoneNumber, setPhoneNumber] = useState('712345678');
-  const [password, setPassword] = useState('password123');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -89,7 +89,7 @@ export default function LoginPage() {
                 <div className="flex-1">
                   <Input
                     type="tel"
-                    placeholder="Enter phone number"
+                    placeholder="e.g. 712509403"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     leftIcon={<Phone className="w-4 h-4 text-zinc-500" />}
@@ -101,7 +101,7 @@ export default function LoginPage() {
 
             <Input
               label="Password"
-              type="password"
+              isPassword
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -129,13 +129,6 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
-        </div>
-
-        {/* Demo credentials tip */}
-        <div className="text-center">
-          <p className="text-[11px] text-zinc-500">
-            💡 Quick Demo: Click Sign In with prefilled demo credentials!
-          </p>
         </div>
       </div>
     </main>

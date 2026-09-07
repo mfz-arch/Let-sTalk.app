@@ -1,20 +1,29 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Sparkles, MessageSquare, ArrowRight, TrendingUp, Users } from 'lucide-react';
+import { Sparkles, MessageSquare, ArrowRight, TrendingUp, Users, UserPlus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useChat } from '../../context/ChatContext';
+import { authService } from '../../services/authService';
 import { StoryBar } from '../../components/home/StoryBar';
 import { Avatar } from '../../components/common/Avatar';
 import { Button } from '../../components/common/Button';
-import { MOCK_USERS } from '../../data/mockData';
+import { User } from '../../types/user';
 
 export default function HomePage() {
   const router = useRouter();
   const { user } = useAuth();
   const { conversations, startConversationWithUser, setActiveConversation } = useChat();
+  const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      const all = authService.getRegisteredUsers().filter((u) => u.id !== user.id);
+      setRegisteredUsers(all);
+    }
+  }, [user]);
 
   const handleQuickChat = async (targetUserId: string) => {
     if (!user) return;
@@ -34,10 +43,10 @@ export default function HomePage() {
               <span>Let'sTalk Social Hub</span>
             </div>
             <h2 className="text-2xl font-extrabold text-white tracking-tight">
-              Welcome back, {user?.name.split(' ')[0]}! 👋
+              Welcome back, {user?.name ? user.name.split(' ')[0] : 'User'}! 👋
             </h2>
             <p className="text-xs md:text-sm text-zinc-400 max-w-lg">
-              Check out the latest stories from your friends, jump back into private chats, or discover registered users on Let'sTalk.
+              Check out stories from your contacts, message registered users, or discover people by phone number.
             </p>
           </div>
 
@@ -54,16 +63,16 @@ export default function HomePage() {
         <div className="flex items-center justify-between px-1">
           <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 flex items-center space-x-1.5">
             <TrendingUp className="w-4 h-4 text-indigo-400" />
-            <span>Recent Stories</span>
+            <span>Stories</span>
           </h3>
           <span className="text-xs text-zinc-500 font-medium">Tap slide to view</span>
         </div>
         <StoryBar />
       </div>
 
-      {/* Grid: Active Conversations + Discover Friends */}
+      {/* Grid: Active Conversations + Registered Contacts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Recent Chats Card */}
+        {/* Recent Conversations Card */}
         <div className="glass-panel p-5 rounded-3xl border border-zinc-800 space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
             <h3 className="text-sm font-bold text-zinc-100 flex items-center space-x-2">
@@ -77,10 +86,20 @@ export default function HomePage() {
           </div>
 
           {conversations.length === 0 ? (
-            <p className="text-xs text-zinc-500 py-4 text-center">No active chats yet.</p>
+            <div className="py-8 text-center space-y-2">
+              <p className="text-xs text-zinc-400 font-semibold">No active chats yet.</p>
+              <p className="text-[11px] text-zinc-500 max-w-xs mx-auto">
+                Search for friends by phone number or name to start your first conversation!
+              </p>
+              <Link href="/search" className="inline-block mt-2">
+                <Button size="sm" variant="secondary" leftIcon={<UserPlus className="w-3.5 h-3.5 text-indigo-400" />}>
+                  Find Contacts
+                </Button>
+              </Link>
+            </div>
           ) : (
             <div className="space-y-2">
-              {conversations.slice(0, 3).map((conv) => {
+              {conversations.slice(0, 4).map((conv) => {
                 const other = conv.participants.find((p) => p.id !== user?.id) || conv.participants[0];
                 return (
                   <div
@@ -110,12 +129,12 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Suggested Friends to Chat */}
+        {/* Registered Users on Let'sTalk */}
         <div className="glass-panel p-5 rounded-3xl border border-zinc-800 space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
             <h3 className="text-sm font-bold text-zinc-100 flex items-center space-x-2">
               <Users className="w-4 h-4 text-indigo-400" />
-              <span>Suggested People</span>
+              <span>Registered People ({registeredUsers.length})</span>
             </h3>
             <Link href="/search" className="text-xs text-indigo-400 font-semibold hover:underline flex items-center space-x-1">
               <span>Search</span>
@@ -123,29 +142,38 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="space-y-2">
-            {MOCK_USERS.slice(0, 3).map((u) => (
-              <div
-                key={u.id}
-                className="flex items-center justify-between p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800/60"
-              >
-                <div className="flex items-center space-x-3 min-w-0">
-                  <Avatar src={u.avatar} alt={u.name} size="md" showStatus onlineStatus={u.onlineStatus} />
-                  <div className="min-w-0">
-                    <h4 className="text-xs font-semibold text-zinc-100 truncate">{u.name}</h4>
-                    <p className="text-[10px] text-zinc-400 truncate">@{u.username}</p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => handleQuickChat(u.id)}
+          {registeredUsers.length === 0 ? (
+            <div className="py-8 text-center space-y-2">
+              <p className="text-xs text-zinc-400 font-semibold">No other registered users yet.</p>
+              <p className="text-[11px] text-zinc-500 max-w-xs mx-auto">
+                Invite friends to register on Let'sTalk using their phone number to start chatting.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {registeredUsers.slice(0, 4).map((u) => (
+                <div
+                  key={u.id}
+                  className="flex items-center justify-between p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800/60"
                 >
-                  Chat
-                </Button>
-              </div>
-            ))}
-          </div>
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <Avatar src={u.avatar} alt={u.name} size="md" showStatus onlineStatus={u.onlineStatus} />
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-semibold text-zinc-100 truncate">{u.name}</h4>
+                      <p className="text-[10px] text-zinc-400 truncate">{u.countryCode} {u.phoneNumber}</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => handleQuickChat(u.id)}
+                  >
+                    Chat
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
