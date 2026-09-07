@@ -45,6 +45,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     fetchConversations(true);
+
+    // Silent background poll for conversations every 3 seconds
+    const convInterval = setInterval(() => {
+      fetchConversations(false);
+    }, 3000);
+
+    return () => clearInterval(convInterval);
   }, [fetchConversations]);
 
   // Join the active conversation's socket room
@@ -54,7 +61,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [socket, activeConversation]);
 
-  // Fetch messages for active conversation
+  // Fetch and poll messages for active conversation
   useEffect(() => {
     if (!activeConversation) {
       setMessages([]);
@@ -72,8 +79,23 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
+    // Silent fast background poll every 1.5 seconds for instant messages across all devices
+    const messageInterval = setInterval(async () => {
+      if (!activeConversation) return;
+      const latestMsgs = await chatService.getMessages(activeConversation.id);
+      if (isMounted && latestMsgs) {
+        setMessages((prev) => {
+          if (latestMsgs.length !== prev.length || latestMsgs[latestMsgs.length - 1]?.id !== prev[prev.length - 1]?.id) {
+            return latestMsgs;
+          }
+          return prev;
+        });
+      }
+    }, 1500);
+
     return () => {
       isMounted = false;
+      clearInterval(messageInterval);
     };
   }, [activeConversation]);
 

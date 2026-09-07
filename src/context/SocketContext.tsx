@@ -32,11 +32,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    // Connect to the backend
-    // Assuming backend runs on the same domain or NEXT_PUBLIC_API_URL is set
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    
-    // We remove '/api' from the end of apiUrl if it exists, since socket.io connects to the root domain usually
+    // Connect to backend or window.location.origin
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000');
     const socketUrl = apiUrl.replace(/\/api\/?$/, '');
 
     const socketInstance = io(socketUrl, {

@@ -1,74 +1,59 @@
-import { UserStoryGroup, StorySlide } from '../types/story';
+import { UserStoryGroup } from '../types/story';
 import { User } from '../types/user';
 
 class StoryService {
-  private getStoredStories(): UserStoryGroup[] {
-    if (typeof window === 'undefined') return [];
-    const str = localStorage.getItem('letstalk_stories');
-    if (!str) return [];
+  async getStories(): Promise<UserStoryGroup[]> {
     try {
-      return JSON.parse(str);
-    } catch {
+      const res = await fetch('/api/stories', { cache: 'no-store' });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.stories || [];
+    } catch (err) {
+      console.error('getStories error:', err);
       return [];
     }
   }
 
-  private saveStories(stories: UserStoryGroup[]): void {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('letstalk_stories', JSON.stringify(stories));
+  async addStory(currentUser: User, mediaUrl: string, caption?: string): Promise<void> {
+    try {
+      const res = await fetch('/api/stories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          userId: currentUser.id,
+          mediaUrl,
+          caption,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Add story failed');
+      }
+    } catch (err) {
+      console.error('addStory error:', err);
+    }
   }
 
-  async getStories(): Promise<UserStoryGroup[]> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    return this.getStoredStories();
-  }
-
-  async addStory(currentUser: User, mediaUrl: string, caption?: string): Promise<UserStoryGroup> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    const newSlide: StorySlide = {
-      id: `st_${Date.now()}`,
-      mediaUrl,
-      caption,
-      type: 'image',
-      createdAt: new Date().toISOString(),
-      viewsCount: 1,
-    };
-
-    const stories = this.getStoredStories();
-    const existingGroupIndex = stories.findIndex((s) => s.userId === currentUser.id);
-
-    if (existingGroupIndex !== -1) {
-      const updatedGroup = {
-        ...stories[existingGroupIndex],
-        user: currentUser,
-        slides: [newSlide, ...stories[existingGroupIndex].slides],
-        updatedAt: newSlide.createdAt,
-      };
-      stories[existingGroupIndex] = updatedGroup;
-      this.saveStories(stories);
-      return updatedGroup;
-    } else {
-      const newGroup: UserStoryGroup = {
-        userId: currentUser.id,
-        user: currentUser,
-        hasUnseen: false,
-        updatedAt: newSlide.createdAt,
-        slides: [newSlide],
-      };
-      stories.unshift(newGroup);
-      this.saveStories(stories);
-      return newGroup;
+  async toggleLikeStory(storyId: string, userId: string): Promise<void> {
+    try {
+      await fetch('/api/stories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'like',
+          storyId,
+          userId,
+        }),
+      });
+    } catch (err) {
+      console.error('toggleLikeStory error:', err);
     }
   }
 
   async markStorySeen(userId: string): Promise<void> {
-    const stories = this.getStoredStories();
-    const idx = stories.findIndex((s) => s.userId === userId);
-    if (idx !== -1) {
-      stories[idx].hasUnseen = false;
-      this.saveStories(stories);
-    }
+    // No-op for now
   }
 }
 

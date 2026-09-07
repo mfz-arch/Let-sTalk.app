@@ -19,7 +19,7 @@ interface StoryContextType {
   openStoryCreator: () => void;
   closeStoryCreator: () => void;
   addStory: (mediaUrl: string, caption?: string) => Promise<void>;
-  toggleLikeStory: (storyId: string) => void;
+  toggleLikeStory: (storyId: string) => Promise<void>;
 }
 
 const StoryContext = createContext<StoryContextType | undefined>(undefined);
@@ -33,15 +33,25 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchStories = useCallback(async () => {
-    setIsLoading(true);
-    const data = await storyService.getStories();
-    setStories(data);
-    setIsLoading(false);
+  const fetchStories = useCallback(async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
+    try {
+      const data = await storyService.getStories();
+      setStories(data);
+    } finally {
+      if (showLoading) setIsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    fetchStories();
+    fetchStories(true);
+
+    // Silent background poll for stories every 3.5 seconds
+    const storyInterval = setInterval(() => {
+      fetchStories(false);
+    }, 3500);
+
+    return () => clearInterval(storyInterval);
   }, [fetchStories]);
 
   const openStoryViewer = (group: UserStoryGroup, slideIndex = 0) => {
@@ -49,9 +59,6 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setActiveSlideIndex(slideIndex);
     setIsViewerOpen(true);
     storyService.markStorySeen(group.userId);
-    setStories((prev) =>
-      prev.map((s) => (s.userId === group.userId ? { ...s, hasUnseen: false } : s))
-    );
   };
 
   const closeStoryViewer = () => {
@@ -96,13 +103,14 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const addStory = async (mediaUrl: string, caption?: string) => {
     if (!user) return;
     await storyService.addStory(user, mediaUrl, caption);
-    await fetchStories();
+    await fetchStories(false);
     closeStoryCreator();
   };
 
-  const toggleLikeStory = (storyId: string) => {
+  const toggleLikeStory = async (storyId: string) => {
     if (!user || !activeStoryGroup) return;
 
+    // Optimistically update local active story slide state
     setActiveStoryGroup((prevGroup) => {
       if (!prevGroup) return null;
       const updatedSlides = prevGroup.slides.map((slide) => {
@@ -122,6 +130,9 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
       return { ...prevGroup, slides: updatedSlides };
     });
+
+    await storyService.toggleLikeStory(storyId, user.id);
+    fetchStories(false);
   };
 
   return (
