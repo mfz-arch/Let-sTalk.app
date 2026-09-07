@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '../context/AuthContext';
 import { ChatProvider } from '../context/ChatContext';
-import { StoryProvider } from '../context/StoryContext';
+import { CallProvider } from '../context/CallContext';
+import { GlobalCallOverlay } from '../components/chat/GlobalCallOverlay';
 
 export const metadata: Metadata = {
   title: "Let'sTalk — Real-Time Social Messaging & Story-Sharing Platform",
@@ -20,7 +21,10 @@ export default function RootLayout({
         <AuthProvider>
           <ChatProvider>
             <StoryProvider>
-              {children}
+              <CallProvider>
+                {children}
+                <GlobalCallOverlay />
+              </CallProvider>
             </StoryProvider>
           </ChatProvider>
         </AuthProvider>

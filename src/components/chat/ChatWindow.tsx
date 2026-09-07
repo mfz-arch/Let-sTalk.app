@@ -9,7 +9,7 @@ import { Avatar } from '../common/Avatar';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { ChatMessageSkeleton } from '../common/Skeleton';
-import { CallOverlayModal } from './CallOverlayModal';
+import { useCall } from '../../context/CallContext';
 
 interface ChatWindowProps {
   conversation: Conversation;
@@ -27,9 +27,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   onBackMobile,
 }) => {
   const { user } = useAuth();
+  const { initiateCall } = useCall();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const [activeCall, setActiveCall] = useState<'audio' | 'video' | null>(null);
 
   const otherParticipant =
     conversation.participants.find((p) => p.id !== user?.id) || conversation.participants[0];
@@ -79,14 +78,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         {/* Call Action Icons */}
         <div className="flex items-center space-x-1 text-zinc-400">
           <button
-            onClick={() => setActiveCall('audio')}
+            onClick={() => otherParticipant && initiateCall(otherParticipant, 'audio')}
             className="p-2 hover:text-indigo-400 hover:bg-zinc-800/60 rounded-xl transition-colors"
             title="Audio Call"
           >
             <Phone className="w-4 h-4" />
           </button>
           <button
-            onClick={() => setActiveCall('video')}
+            onClick={() => otherParticipant && initiateCall(otherParticipant, 'video')}
             className="p-2 hover:text-indigo-400 hover:bg-zinc-800/60 rounded-xl transition-colors"
             title="Video Call"
           >
@@ -133,16 +132,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {/* Message Input Bar */}
       <MessageInput onSend={onSendMessage} />
-
-      {/* Interactive Call Overlay Modal */}
-      {otherParticipant && (
-        <CallOverlayModal
-          isOpen={!!activeCall}
-          onClose={() => setActiveCall(null)}
-          targetUser={otherParticipant}
-          callType={activeCall || 'audio'}
-        />
-      )}
     </div>
   );
 };
