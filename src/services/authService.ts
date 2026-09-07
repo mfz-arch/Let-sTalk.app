@@ -1,5 +1,4 @@
 import { User } from '../types/user';
-import { MOCK_CURRENT_USER, MOCK_USERS } from '../data/mockData';
 
 export interface RegisterPayload {
   name: string;
@@ -18,49 +17,50 @@ class AuthService {
   private currentUser: User | null = null;
 
   constructor() {
-    // Check localStorage for persisted user state on client side
+    // Unauthenticated by default on client load
     if (typeof window !== 'undefined') {
       const savedUser = localStorage.getItem('letstalk_user');
       if (savedUser) {
         try {
           this.currentUser = JSON.parse(savedUser);
         } catch {
-          this.currentUser = MOCK_CURRENT_USER;
+          this.currentUser = null;
         }
       } else {
-        this.currentUser = MOCK_CURRENT_USER;
+        this.currentUser = null;
       }
     }
   }
 
   async getCurrentUser(): Promise<User | null> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 200));
     return this.currentUser;
   }
 
   async login(payload: LoginPayload): Promise<User> {
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await new Promise((resolve) => setTimeout(resolve, 400));
 
-    // Try finding user by phone number or default to mock user
-    const existing = MOCK_USERS.find(
-      (u) => u.phoneNumber === payload.phoneNumber && u.countryCode === payload.countryCode
-    );
-
-    const userToLogin = existing || {
-      ...MOCK_CURRENT_USER,
+    const loggedUser: User = {
+      id: `usr_${Date.now()}`,
+      name: payload.phoneNumber === '712345678' ? 'Sarah Jenkins' : 'User Account',
+      username: `user_${payload.phoneNumber.slice(-4)}`,
       phoneNumber: payload.phoneNumber,
       countryCode: payload.countryCode,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(payload.phoneNumber)}`,
+      bio: "Hey there! I am using Let'sTalk.",
+      onlineStatus: 'online',
+      createdAt: new Date().toISOString(),
     };
 
-    this.currentUser = userToLogin;
+    this.currentUser = loggedUser;
     if (typeof window !== 'undefined') {
-      localStorage.setItem('letstalk_user', JSON.stringify(userToLogin));
+      localStorage.setItem('letstalk_user', JSON.stringify(loggedUser));
     }
-    return userToLogin;
+    return loggedUser;
   }
 
   async register(payload: RegisterPayload): Promise<User> {
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     const newUser: User = {
       id: `usr_${Date.now()}`,
@@ -69,7 +69,7 @@ class AuthService {
       phoneNumber: payload.phoneNumber,
       countryCode: payload.countryCode,
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(payload.name)}`,
-      bio: 'Hey there! I am using Let\'sTalk.',
+      bio: "Hey there! I am using Let'sTalk.",
       onlineStatus: 'online',
       createdAt: new Date().toISOString(),
     };
@@ -82,7 +82,7 @@ class AuthService {
   }
 
   async logout(): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 200));
     this.currentUser = null;
     if (typeof window !== 'undefined') {
       localStorage.removeItem('letstalk_user');
@@ -90,7 +90,7 @@ class AuthService {
   }
 
   async updateProfile(updates: Partial<User>): Promise<User> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 300));
     if (!this.currentUser) throw new Error('No user logged in');
     this.currentUser = { ...this.currentUser, ...updates };
     if (typeof window !== 'undefined') {

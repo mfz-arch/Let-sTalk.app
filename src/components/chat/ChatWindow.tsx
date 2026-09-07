@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Phone, Video, Info } from 'lucide-react';
 import { Conversation, Message } from '../../types/chat';
@@ -9,6 +9,7 @@ import { Avatar } from '../common/Avatar';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { ChatMessageSkeleton } from '../common/Skeleton';
+import { CallOverlayModal } from './CallOverlayModal';
 
 interface ChatWindowProps {
   conversation: Conversation;
@@ -28,6 +29,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const [activeCall, setActiveCall] = useState<'audio' | 'video' | null>(null);
+
   const otherParticipant =
     conversation.participants.find((p) => p.id !== user?.id) || conversation.participants[0];
 
@@ -36,7 +39,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   }, [messages]);
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-zinc-950/40 overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-zinc-950/40 overflow-hidden relative">
       {/* Active Chat Header */}
       <div className="glass-panel px-4 py-3 border-b border-zinc-800 flex items-center justify-between z-10">
         <div className="flex items-center space-x-3">
@@ -73,12 +76,20 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           </Link>
         </div>
 
-        {/* Action icons */}
+        {/* Call Action Icons */}
         <div className="flex items-center space-x-1 text-zinc-400">
-          <button className="p-2 hover:text-indigo-400 hover:bg-zinc-800/60 rounded-xl transition-colors">
+          <button
+            onClick={() => setActiveCall('audio')}
+            className="p-2 hover:text-indigo-400 hover:bg-zinc-800/60 rounded-xl transition-colors"
+            title="Audio Call"
+          >
             <Phone className="w-4 h-4" />
           </button>
-          <button className="p-2 hover:text-indigo-400 hover:bg-zinc-800/60 rounded-xl transition-colors">
+          <button
+            onClick={() => setActiveCall('video')}
+            className="p-2 hover:text-indigo-400 hover:bg-zinc-800/60 rounded-xl transition-colors"
+            title="Video Call"
+          >
             <Video className="w-4 h-4" />
           </button>
           <button className="p-2 hover:text-indigo-400 hover:bg-zinc-800/60 rounded-xl transition-colors">
@@ -122,6 +133,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {/* Message Input Bar */}
       <MessageInput onSend={onSendMessage} />
+
+      {/* Interactive Call Overlay Modal */}
+      {otherParticipant && (
+        <CallOverlayModal
+          isOpen={!!activeCall}
+          onClose={() => setActiveCall(null)}
+          targetUser={otherParticipant}
+          callType={activeCall || 'audio'}
+        />
+      )}
     </div>
   );
 };
