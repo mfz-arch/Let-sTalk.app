@@ -3,6 +3,7 @@ import './globals.css';
 import { AuthProvider } from '../context/AuthContext';
 import { ChatProvider } from '../context/ChatContext';
 import { CallProvider } from '../context/CallContext';
+import { StoryProvider } from '../context/StoryContext';
 import { GlobalCallOverlay } from '../components/chat/GlobalCallOverlay';
 
 export const metadata: Metadata = {
