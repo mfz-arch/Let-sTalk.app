@@ -13,7 +13,7 @@ interface ChatContextType {
   isLoadingConversations: boolean;
   isLoadingMessages: boolean;
   setActiveConversation: (conv: Conversation | null) => void;
-  sendMessage: (content: string, type?: 'text' | 'image' | 'story_reply', mediaUrl?: string, storyContext?: Message['storyContext']) => Promise<void>;
+  sendMessage: (content: string, type?: 'text' | 'image' | 'audio' | 'story_reply', mediaUrl?: string, storyContext?: Message['storyContext']) => Promise<void>;
   startConversationWithUser: (targetUserId: string) => Promise<Conversation>;
   markAsRead: (conversationId: string) => Promise<void>;
   refreshConversations: () => Promise<void>;
