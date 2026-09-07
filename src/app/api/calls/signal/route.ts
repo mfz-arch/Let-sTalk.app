@@ -1,49 +1,28 @@
 import { NextResponse } from 'next/server';
-
-// In-memory call signaling store for active WebRTC calls
-interface ActiveCall {
-  id: string;
-  callerId: string;
-  callerName: string;
-  callerAvatar?: string;
-  receiverId: string;
-  callType: 'audio' | 'video';
-  offer?: any;
-  answer?: any;
-  callerCandidates: any[];
-  receiverCandidates: any[];
-  status: 'ringing' | 'connected' | 'ended' | 'declined';
-  updatedAt: number;
-}
-
-// Global active calls map
-const activeCalls = new Map<string, ActiveCall>();
-
-// Cleanup stale calls (> 2 minutes)
-function cleanupStaleCalls() {
-  const now = Date.now();
-  for (const [id, call] of activeCalls.entries()) {
-    if (now - call.updatedAt > 120000 || call.status === 'ended' || call.status === 'declined') {
-      activeCalls.delete(id);
-    }
-  }
-}
+import { connectDB } from '@/lib/db';
+import { CallSignal } from '@/models/CallSignal';
 
 export async function POST(request: Request) {
   try {
-    cleanupStaleCalls();
+    await connectDB();
     const body = await request.json();
     const { action, userId, targetUserId, callType, offer, answer, candidate, callId } = body;
 
-    // 1. INITIATE CALL (Caller sends offer)
+    // 1. INITIATE CALL (Caller creates offer in MongoDB Atlas)
     if (action === 'call') {
       if (!userId || !targetUserId || !offer) {
         return NextResponse.json({ message: 'Missing parameters for call initiation' }, { status: 400 });
       }
 
-      const id = `${userId}_${targetUserId}_${Date.now()}`;
-      const newCall: ActiveCall = {
-        id,
+      // Cleanup any active ringing calls for caller or target user
+      await CallSignal.deleteMany({
+        $or: [{ callerId: userId }, { receiverId: userId }, { callerId: targetUserId }, { receiverId: targetUserId }],
+        status: 'ringing',
+      });
+
+      const id = `call_${userId}_${targetUserId}_${Date.now()}`;
+      const newCall = await CallSignal.create({
+        callId: id,
         callerId: userId,
         callerName: body.callerName || 'User',
         callerAvatar: body.callerAvatar || '',
@@ -53,54 +32,68 @@ export async function POST(request: Request) {
         callerCandidates: [],
         receiverCandidates: [],
         status: 'ringing',
-        updatedAt: Date.now(),
-      };
+      });
 
-      activeCalls.set(id, newCall);
       return NextResponse.json({ success: true, callId: id, call: newCall });
     }
 
-    // 2. CHECK FOR INCOMING CALL OR ACTIVE CALL STATUS
+    // 2. POLL ACTIVE CALL & REMOTE ICE CANDIDATES
     if (action === 'poll') {
       if (!userId) {
         return NextResponse.json({ message: 'User ID required' }, { status: 400 });
       }
 
-      // Check if user is receiver of a ringing call or participant in active call
-      for (const call of activeCalls.values()) {
+      // Find ringing or connected call involving user
+      let call = null;
+      if (callId) {
+        call = await CallSignal.findOne({ callId });
+      }
+
+      if (!call) {
+        // Find latest active call where user is receiver or caller
+        call = await CallSignal.findOne({
+          $or: [{ receiverId: userId }, { callerId: userId }],
+          status: { $in: ['ringing', 'connected'] },
+        }).sort({ createdAt: -1 });
+      }
+
+      if (call) {
         const isCaller = call.callerId === userId;
         const isReceiver = call.receiverId === userId;
 
-        if (isReceiver && call.status === 'ringing') {
-          return NextResponse.json({
-            activeCall: call,
-            role: 'receiver',
-            remoteCandidates: call.callerCandidates,
-          });
-        }
-        if ((isCaller || isReceiver) && callId && call.id === callId) {
-          return NextResponse.json({
-            activeCall: call,
-            role: isCaller ? 'caller' : 'receiver',
-            remoteCandidates: isCaller ? call.receiverCandidates : call.callerCandidates,
-          });
-        }
+        return NextResponse.json({
+          activeCall: {
+            id: call.callId,
+            callerId: call.callerId,
+            callerName: call.callerName,
+            callerAvatar: call.callerAvatar,
+            receiverId: call.receiverId,
+            callType: call.callType,
+            offer: call.offer,
+            answer: call.answer,
+            status: call.status,
+          },
+          role: isCaller ? 'caller' : 'receiver',
+          remoteCandidates: isCaller ? call.receiverCandidates : call.callerCandidates,
+        });
       }
 
       return NextResponse.json({ activeCall: null });
     }
 
-    // 3. ANSWER CALL (Receiver sends answer)
+    // 3. ANSWER CALL (Receiver saves answer in MongoDB)
     if (action === 'answer') {
       if (!callId || !answer) {
         return NextResponse.json({ message: 'Call ID and answer required' }, { status: 400 });
       }
 
-      const call = activeCalls.get(callId);
+      const call = await CallSignal.findOneAndUpdate(
+        { callId },
+        { answer, status: 'connected' },
+        { new: true }
+      );
+
       if (call) {
-        call.answer = answer;
-        call.status = 'connected';
-        call.updatedAt = Date.now();
         return NextResponse.json({ success: true, call });
       }
       return NextResponse.json({ message: 'Call not found' }, { status: 404 });
@@ -112,14 +105,13 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: 'Call ID, candidate, and userId required' }, { status: 400 });
       }
 
-      const call = activeCalls.get(callId);
+      const call = await CallSignal.findOne({ callId });
       if (call) {
         if (call.callerId === userId) {
-          call.callerCandidates.push(candidate);
+          await CallSignal.updateOne({ callId }, { $push: { callerCandidates: candidate } });
         } else {
-          call.receiverCandidates.push(candidate);
+          await CallSignal.updateOne({ callId }, { $push: { receiverCandidates: candidate } });
         }
-        call.updatedAt = Date.now();
         return NextResponse.json({ success: true });
       }
       return NextResponse.json({ message: 'Call not found' }, { status: 404 });
@@ -127,11 +119,11 @@ export async function POST(request: Request) {
 
     // 5. END / DECLINE CALL
     if (action === 'end' || action === 'decline') {
-      if (callId && activeCalls.has(callId)) {
-        const call = activeCalls.get(callId)!;
-        call.status = action === 'decline' ? 'declined' : 'ended';
-        call.updatedAt = Date.now();
-        setTimeout(() => activeCalls.delete(callId), 3000);
+      if (callId) {
+        await CallSignal.findOneAndUpdate(
+          { callId },
+          { status: action === 'decline' ? 'declined' : 'ended' }
+        );
       }
       return NextResponse.json({ success: true });
     }

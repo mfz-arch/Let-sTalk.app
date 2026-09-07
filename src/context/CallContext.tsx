@@ -35,11 +35,28 @@ interface CallContextType {
 
 const CallContext = createContext<CallContextType | undefined>(undefined);
 
+// Robust STUN + Free Metered TURN servers for WebRTC NAT traversal across all mobile/Wi-Fi networks
 const ICE_SERVERS = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun.services.mozilla.com' },
+    {
+      urls: 'turn:openrelay.metered.ca:80',
+      username: 'openrelay',
+      credential: 'openrelay',
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443',
+      username: 'openrelay',
+      credential: 'openrelay',
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+      username: 'openrelay',
+      credential: 'openrelay',
+    },
   ],
 };
 
@@ -61,7 +78,11 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Clean up streams & peer connection
   const cleanupCallState = useCallback(() => {
     if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
+      try {
+        peerConnectionRef.current.close();
+      } catch (err) {
+        console.error('Error closing peer connection:', err);
+      }
       peerConnectionRef.current = null;
     }
     if (localStream) {
@@ -134,7 +155,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           }
 
-          // 3. Process remote ICE candidates for zero-latency WebRTC media stream
+          // 3. Process remote ICE candidates for WebRTC media stream
           if (peerConnectionRef.current && remoteCandidates.length > 0) {
             for (const candidate of remoteCandidates) {
               const candStr = JSON.stringify(candidate);
@@ -161,7 +182,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    pollTimerRef.current = setInterval(pollCallSignal, 1500);
+    pollTimerRef.current = setInterval(pollCallSignal, 1000);
 
     return () => {
       if (pollTimerRef.current) clearInterval(pollTimerRef.current);
@@ -180,7 +201,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       setLocalStream(stream);
 
-      // 2. Create RTCPeerConnection
+      // 2. Create RTCPeerConnection with STUN + TURN servers
       const pc = new RTCPeerConnection(ICE_SERVERS);
       peerConnectionRef.current = pc;
 
@@ -224,7 +245,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setActiveCall(data.call);
         setCallRole('caller');
 
-        // Send local ICE candidates to server
+        // Send local ICE candidates to MongoDB Atlas
         pc.onicecandidate = (event) => {
           if (event.candidate) {
             fetch('/api/calls/signal', {
@@ -259,7 +280,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       setLocalStream(stream);
 
-      // 2. Create RTCPeerConnection
+      // 2. Create RTCPeerConnection with STUN + TURN
       const pc = new RTCPeerConnection(ICE_SERVERS);
       peerConnectionRef.current = pc;
 
