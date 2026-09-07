@@ -15,36 +15,31 @@ export async function POST(request: Request) {
     const cleanPhone = phoneNumber.trim();
     const cleanCode = countryCode.trim();
 
-    let user = await User.findOne({ phoneNumber: cleanPhone, countryCode: cleanCode });
+    // Find account in MongoDB Atlas
+    const user = await User.findOne({ phoneNumber: cleanPhone, countryCode: cleanCode });
 
+    // If account does not exist, return 404 Account Not Found error
     if (!user) {
-      // Create user automatically in MongoDB Atlas if logging in for the first time
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-      const name = `User ${cleanPhone.slice(-4)}`;
-      const username = `user_${cleanPhone.slice(-4)}`;
-      const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(cleanPhone)}`;
-
-      user = await User.create({
-        name,
-        username,
-        phoneNumber: cleanPhone,
-        countryCode: cleanCode,
-        password: hashedPassword,
-        avatar,
-        bio: "Hey there! I am using Let'sTalk.",
-        onlineStatus: 'online',
-      });
-    } else {
-      const isMatch = await bcrypt.compare(password, user.password || '');
-      if (!isMatch) {
-        return NextResponse.json({ message: 'Invalid phone number or password' }, { status: 401 });
-      }
-      user.onlineStatus = 'online';
-      await user.save();
+      return NextResponse.json(
+        { message: 'Account not found. Please create an account.' },
+        { status: 404 }
+      );
     }
 
+    // Verify password
+    const isMatch = await bcrypt.compare(password, user.password || '');
+    if (!isMatch) {
+      return NextResponse.json(
+        { message: 'Invalid password. Please check your credentials.' },
+        { status: 401 }
+      );
+    }
+
+    user.onlineStatus = 'online';
+    await user.save();
+
     return NextResponse.json({
+      message: 'Sign in successful',
       user: {
         id: user._id.toString(),
         name: user.name,
