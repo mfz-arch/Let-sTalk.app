@@ -29,101 +29,63 @@ class AuthService {
     }
   }
 
-  // Get all registered users from dynamic local storage database
-  getRegisteredUsers(): User[] {
-    if (typeof window === 'undefined') return [];
-    const usersStr = localStorage.getItem('letstalk_registered_users');
-    if (!usersStr) return [];
-    try {
-      return JSON.parse(usersStr);
-    } catch {
-      return [];
-    }
-  }
-
-  private saveUserToDirectory(user: User): void {
-    if (typeof window === 'undefined') return;
-    const users = this.getRegisteredUsers();
-    const existingIdx = users.findIndex((u) => u.id === user.id || (u.phoneNumber === user.phoneNumber && u.countryCode === user.countryCode));
-    if (existingIdx !== -1) {
-      users[existingIdx] = user;
-    } else {
-      users.push(user);
-    }
-    localStorage.setItem('letstalk_registered_users', JSON.stringify(users));
-  }
-
   async getCurrentUser(): Promise<User | null> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
     return this.currentUser;
   }
 
   async login(payload: LoginPayload): Promise<User> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const registeredUsers = this.getRegisteredUsers();
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    // Find registered user matching phone and countryCode
-    const existing = registeredUsers.find(
-      (u) => u.phoneNumber === payload.phoneNumber && u.countryCode === payload.countryCode
-    );
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Login failed');
+      }
 
-    if (!existing) {
-      // If logging in for the first time, register automatically into user directory
-      const newAuthUser: User = {
-        id: `usr_${Date.now()}`,
-        name: `User ${payload.phoneNumber.slice(-4)}`,
-        username: `user_${payload.phoneNumber.slice(-4)}`,
-        phoneNumber: payload.phoneNumber,
-        countryCode: payload.countryCode,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(payload.phoneNumber)}`,
-        bio: "Hey there! I am using Let'sTalk.",
-        onlineStatus: 'online',
-        createdAt: new Date().toISOString(),
-      };
-      this.currentUser = newAuthUser;
-      this.saveUserToDirectory(newAuthUser);
-    } else {
-      existing.onlineStatus = 'online';
-      this.currentUser = existing;
-      this.saveUserToDirectory(existing);
+      const data = await res.json();
+      this.currentUser = data.user;
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('letstalk_user', JSON.stringify(data.user));
+      }
+      return data.user;
+    } catch (err: any) {
+      console.error('AuthService Login Error:', err);
+      throw err;
     }
-
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('letstalk_user', JSON.stringify(this.currentUser));
-    }
-    return this.currentUser!;
   }
 
   async register(payload: RegisterPayload): Promise<User> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    const newUser: User = {
-      id: `usr_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-      name: payload.name,
-      username: payload.name.toLowerCase().replace(/\s+/g, '_'),
-      phoneNumber: payload.phoneNumber,
-      countryCode: payload.countryCode,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(payload.name)}`,
-      bio: "Hey there! I am using Let'sTalk.",
-      onlineStatus: 'online',
-      createdAt: new Date().toISOString(),
-    };
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
 
-    this.currentUser = newUser;
-    this.saveUserToDirectory(newUser);
+      const data = await res.json();
+      this.currentUser = data.user;
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('letstalk_user', JSON.stringify(newUser));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('letstalk_user', JSON.stringify(data.user));
+      }
+      return data.user;
+    } catch (err: any) {
+      console.error('AuthService Register Error:', err);
+      throw err;
     }
-    return newUser;
   }
 
   async logout(): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    if (this.currentUser) {
-      this.currentUser.onlineStatus = 'offline';
-      this.saveUserToDirectory(this.currentUser);
-    }
     this.currentUser = null;
     if (typeof window !== 'undefined') {
       localStorage.removeItem('letstalk_user');
@@ -131,10 +93,8 @@ class AuthService {
   }
 
   async updateProfile(updates: Partial<User>): Promise<User> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
     if (!this.currentUser) throw new Error('No user logged in');
     this.currentUser = { ...this.currentUser, ...updates };
-    this.saveUserToDirectory(this.currentUser);
 
     if (typeof window !== 'undefined') {
       localStorage.setItem('letstalk_user', JSON.stringify(this.currentUser));

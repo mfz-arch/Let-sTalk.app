@@ -1,50 +1,29 @@
 import { Conversation, Message } from '../types/chat';
 import { User } from '../types/user';
-import { authService } from './authService';
 
 class ChatService {
-  private getStoredConversations(): Conversation[] {
-    if (typeof window === 'undefined') return [];
-    const str = localStorage.getItem('letstalk_conversations');
-    if (!str) return [];
+  async getConversations(currentUserId: string): Promise<Conversation[]> {
     try {
-      return JSON.parse(str);
-    } catch {
+      const res = await fetch(`/api/chats/conversations?userId=${encodeURIComponent(currentUserId)}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.conversations || [];
+    } catch (err) {
+      console.error('getConversations error:', err);
       return [];
     }
   }
 
-  private saveConversations(conversations: Conversation[]): void {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('letstalk_conversations', JSON.stringify(conversations));
-  }
-
-  private getStoredMessages(): Record<string, Message[]> {
-    if (typeof window === 'undefined') return {};
-    const str = localStorage.getItem('letstalk_messages');
-    if (!str) return {};
-    try {
-      return JSON.parse(str);
-    } catch {
-      return {};
-    }
-  }
-
-  private saveMessages(messagesMap: Record<string, Message[]>): void {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('letstalk_messages', JSON.stringify(messagesMap));
-  }
-
-  async getConversations(currentUserId: string): Promise<Conversation[]> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    const conversations = this.getStoredConversations();
-    return conversations.filter((c) => c.participantIds.includes(currentUserId));
-  }
-
   async getMessages(conversationId: string): Promise<Message[]> {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const messagesMap = this.getStoredMessages();
-    return messagesMap[conversationId] || [];
+    try {
+      const res = await fetch(`/api/chats/messages?conversationId=${encodeURIComponent(conversationId)}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.messages || [];
+    } catch (err) {
+      console.error('getMessages error:', err);
+      return [];
+    }
   }
 
   async sendMessage(
@@ -56,96 +35,61 @@ class ChatService {
     mediaUrl?: string,
     storyContext?: Message['storyContext']
   ): Promise<Message> {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const res = await fetch('/api/chats/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversationId,
+        senderId,
+        receiverId,
+        content,
+        type,
+        mediaUrl,
+        storyContext,
+      }),
+    });
 
-    const newMessage: Message = {
-      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-      conversationId,
-      senderId,
-      receiverId,
-      content,
-      type,
-      mediaUrl,
-      storyContext,
-      createdAt: new Date().toISOString(),
-      status: 'sent',
-    };
-
-    const messagesMap = this.getStoredMessages();
-    if (!messagesMap[conversationId]) {
-      messagesMap[conversationId] = [];
-    }
-    messagesMap[conversationId].push(newMessage);
-    this.saveMessages(messagesMap);
-
-    const conversations = this.getStoredConversations();
-    const convIndex = conversations.findIndex((c) => c.id === conversationId);
-    if (convIndex !== -1) {
-      conversations[convIndex] = {
-        ...conversations[convIndex],
-        lastMessage: newMessage,
-        updatedAt: newMessage.createdAt,
-      };
-      this.saveConversations(conversations);
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Send message failed');
     }
 
-    return newMessage;
+    const data = await res.json();
+    return data.message;
   }
 
   async getOrCreateConversation(currentUserId: string, targetUserId: string, currentUser: User): Promise<Conversation> {
-    const conversations = this.getStoredConversations();
-    const existing = conversations.find(
-      (c) => c.participantIds.includes(currentUserId) && c.participantIds.includes(targetUserId)
-    );
+    const res = await fetch('/api/chats/conversations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentUserId, targetUserId }),
+    });
 
-    if (existing) return existing;
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Create conversation failed');
+    }
 
-    const registeredUsers = authService.getRegisteredUsers();
-    const targetUser = registeredUsers.find((u) => u.id === targetUserId);
-    if (!targetUser) throw new Error('Target user not found');
-
-    const newConv: Conversation = {
-      id: `conv_${Date.now()}`,
-      participantIds: [currentUserId, targetUserId],
-      participants: [currentUser, targetUser],
-      unreadCount: 0,
-      updatedAt: new Date().toISOString(),
-    };
-
-    conversations.unshift(newConv);
-    this.saveConversations(conversations);
-
-    const messagesMap = this.getStoredMessages();
-    messagesMap[newConv.id] = [];
-    this.saveMessages(messagesMap);
-
-    return newConv;
+    const data = await res.json();
+    return data.conversation;
   }
 
   async searchUsers(query: string, currentUserId: string): Promise<User[]> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    const registeredUsers = authService.getRegisteredUsers();
-    const otherUsers = registeredUsers.filter((u) => u.id !== currentUserId);
-
-    if (!query.trim()) return otherUsers;
-
-    const q = query.toLowerCase().trim();
-    return otherUsers.filter(
-      (u) =>
-        u.name.toLowerCase().includes(q) ||
-        u.username.toLowerCase().includes(q) ||
-        u.phoneNumber.includes(q) ||
-        (u.countryCode + u.phoneNumber).includes(q)
-    );
+    try {
+      const res = await fetch(
+        `/api/users/search?q=${encodeURIComponent(query)}&currentUserId=${encodeURIComponent(currentUserId)}`
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.users || [];
+    } catch (err) {
+      console.error('searchUsers error:', err);
+      return [];
+    }
   }
 
   async markAsRead(conversationId: string): Promise<void> {
-    const conversations = this.getStoredConversations();
-    const convIndex = conversations.findIndex((c) => c.id === conversationId);
-    if (convIndex !== -1) {
-      conversations[convIndex].unreadCount = 0;
-      this.saveConversations(conversations);
-    }
+    // No-op for now
   }
 }
 

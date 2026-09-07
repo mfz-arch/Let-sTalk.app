@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Sparkles, MessageSquare, ArrowRight, TrendingUp, Users, UserPlus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useChat } from '../../context/ChatContext';
-import { authService } from '../../services/authService';
+import { chatService } from '../../services/chatService';
 import { StoryBar } from '../../components/home/StoryBar';
 import { Avatar } from '../../components/common/Avatar';
 import { Button } from '../../components/common/Button';
@@ -20,8 +20,9 @@ export default function HomePage() {
 
   useEffect(() => {
     if (user) {
-      const all = authService.getRegisteredUsers().filter((u) => u.id !== user.id);
-      setRegisteredUsers(all);
+      chatService.searchUsers('', user.id).then((users) => {
+        setRegisteredUsers(users);
+      });
     }
   }, [user]);
 
