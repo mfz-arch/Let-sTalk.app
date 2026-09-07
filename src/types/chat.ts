@@ -3,6 +3,14 @@ import { User } from './user';
 export type MessageStatus = 'sent' | 'delivered' | 'read';
 export type MessageType = 'text' | 'image' | 'audio' | 'story_reply';
 
+export interface MessageReplyContext {
+  id: string;
+  senderName: string;
+  content: string;
+  mediaUrl?: string;
+  type?: MessageType;
+}
+
 export interface Message {
   id: string;
   conversationId: string;
@@ -17,6 +25,7 @@ export interface Message {
     storyId: string;
     storyMediaUrl: string;
   };
+  replyTo?: MessageReplyContext;
 }
 
 export interface Conversation {

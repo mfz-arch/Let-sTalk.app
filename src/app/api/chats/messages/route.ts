@@ -24,6 +24,7 @@ export async function GET(request: Request) {
       type: m.type,
       mediaUrl: m.mediaUrl,
       storyContext: m.storyContext,
+      replyTo: m.replyTo,
       createdAt: m.createdAt,
       status: m.status,
     }));
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     await connectDB();
-    const { conversationId, senderId, receiverId, content, type = 'text', mediaUrl, storyContext } = await request.json();
+    const { conversationId, senderId, receiverId, content, type = 'text', mediaUrl, storyContext, replyTo } = await request.json();
 
     if (!conversationId || !senderId || !receiverId) {
       return NextResponse.json({ message: 'Conversation and User IDs required' }, { status: 400 });
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
       type,
       mediaUrl,
       storyContext,
+      replyTo,
       status: 'sent',
     });
 
@@ -69,6 +71,7 @@ export async function POST(request: Request) {
       type: message.type,
       mediaUrl: message.mediaUrl,
       storyContext: message.storyContext,
+      replyTo: message.replyTo,
       createdAt: message.createdAt,
       status: message.status,
     };

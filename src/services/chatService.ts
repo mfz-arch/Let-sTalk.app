@@ -33,7 +33,8 @@ class ChatService {
     content: string,
     type: 'text' | 'image' | 'audio' | 'story_reply' = 'text',
     mediaUrl?: string,
-    storyContext?: Message['storyContext']
+    storyContext?: Message['storyContext'],
+    replyTo?: Message['replyTo']
   ): Promise<Message> {
     const res = await fetch('/api/chats/messages', {
       method: 'POST',
@@ -46,6 +47,7 @@ class ChatService {
         type,
         mediaUrl,
         storyContext,
+        replyTo,
       }),
     });
 

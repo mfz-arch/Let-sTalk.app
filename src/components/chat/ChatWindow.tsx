@@ -16,7 +16,7 @@ interface ChatWindowProps {
   conversation: Conversation;
   messages: Message[];
   isLoading?: boolean;
-  onSendMessage: (text: string, mediaUrl?: string, type?: 'text' | 'image' | 'audio') => Promise<void>;
+  onSendMessage: (text: string, mediaUrl?: string, type?: 'text' | 'image' | 'audio', replyTo?: Message['replyTo']) => Promise<void>;
   onBackMobile?: () => void;
 }
 
@@ -31,6 +31,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const { initiateCall } = useCall();
   const { onlineUsers } = useSocket();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [replyingToMessage, setReplyingToMessage] = useState<Message | null>(null);
 
   const otherParticipant =
     conversation.participants.find((p) => p.id !== user?.id) || conversation.participants[0];
@@ -127,6 +128,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
               key={msg.id}
               message={msg}
               isMe={msg.senderId === user?.id}
+              onReply={(m) => setReplyingToMessage(m)}
             />
           ))
         )}
@@ -135,7 +137,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       </div>
 
       {/* Message Input Bar */}
-      <MessageInput onSend={onSendMessage} />
+      <MessageInput
+        onSend={onSendMessage}
+        replyingToMessage={replyingToMessage}
+        onCancelReply={() => setReplyingToMessage(null)}
+        otherParticipantName={otherParticipant?.name}
+      />
     </div>
   );
 };

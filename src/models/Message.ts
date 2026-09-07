@@ -11,6 +11,13 @@ export interface IMessage extends Document {
     storyId: string;
     storyMediaUrl: string;
   };
+  replyTo?: {
+    id: string;
+    senderName: string;
+    content: string;
+    mediaUrl?: string;
+    type?: string;
+  };
   status: 'sent' | 'delivered' | 'read';
   createdAt: Date;
 }
@@ -26,6 +33,13 @@ const MessageSchema = new Schema(
     storyContext: {
       storyId: { type: String },
       storyMediaUrl: { type: String },
+    },
+    replyTo: {
+      id: { type: String },
+      senderName: { type: String },
+      content: { type: String },
+      mediaUrl: { type: String },
+      type: { type: String },
     },
     status: { type: String, enum: ['sent', 'delivered', 'read'], default: 'sent' },
   },

@@ -14,7 +14,13 @@ interface ChatContextType {
   isLoadingConversations: boolean;
   isLoadingMessages: boolean;
   setActiveConversation: (conv: Conversation | null) => void;
-  sendMessage: (content: string, type?: 'text' | 'image' | 'audio' | 'story_reply', mediaUrl?: string, storyContext?: Message['storyContext']) => Promise<void>;
+  sendMessage: (
+    content: string,
+    type?: 'text' | 'image' | 'audio' | 'story_reply',
+    mediaUrl?: string,
+    storyContext?: Message['storyContext'],
+    replyTo?: Message['replyTo']
+  ) => Promise<void>;
   startConversationWithUser: (targetUserId: string) => Promise<Conversation>;
   markAsRead: (conversationId: string) => Promise<void>;
   refreshConversations: () => Promise<void>;
@@ -149,7 +155,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     content: string,
     type: 'text' | 'image' | 'audio' | 'story_reply' = 'text',
     mediaUrl?: string,
-    storyContext?: Message['storyContext']
+    storyContext?: Message['storyContext'],
+    replyTo?: Message['replyTo']
   ) => {
     if (!user || !activeConversation) return;
 
@@ -163,7 +170,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       content,
       type,
       mediaUrl,
-      storyContext
+      storyContext,
+      replyTo
     );
 
     setMessages((prev) => [...prev, newMsg]);

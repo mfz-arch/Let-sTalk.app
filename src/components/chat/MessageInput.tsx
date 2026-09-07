@@ -1,17 +1,27 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image as ImageIcon, Smile, X, Mic, Square, Trash2 } from 'lucide-react';
+import { Send, Image as ImageIcon, Smile, X, Mic, Trash2, CornerUpLeft } from 'lucide-react';
 import Image from 'next/image';
+import { Message } from '../../types/chat';
 
 interface MessageInputProps {
-  onSend: (text: string, mediaUrl?: string, type?: 'text' | 'image' | 'audio') => Promise<void>;
+  onSend: (text: string, mediaUrl?: string, type?: 'text' | 'image' | 'audio', replyTo?: Message['replyTo']) => Promise<void>;
+  replyingToMessage?: Message | null;
+  onCancelReply?: () => void;
+  otherParticipantName?: string;
   disabled?: boolean;
 }
 
 const EMOJI_LIST = ['👍', '❤️', '🔥', '😂', '🎉', '👋', '🚀', '😍', '🙌', '✨'];
 
-export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = false }) => {
+export const MessageInput: React.FC<MessageInputProps> = ({
+  onSend,
+  replyingToMessage,
+  onCancelReply,
+  otherParticipantName = 'User',
+  disabled = false,
+}) => {
   const [text, setText] = useState('');
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -92,7 +102,18 @@ export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = f
         if (audioBase64) {
           setIsSending(true);
           try {
-            await onSend('🎙️ Voice message', audioBase64, 'audio');
+            const replyObj = replyingToMessage
+              ? {
+                  id: replyingToMessage.id,
+                  senderName: replyingToMessage.replyTo?.senderName || otherParticipantName,
+                  content: replyingToMessage.content || 'Voice message',
+                  mediaUrl: replyingToMessage.mediaUrl,
+                  type: replyingToMessage.type,
+                }
+              : undefined;
+
+            await onSend('🎙️ Voice message', audioBase64, 'audio', replyObj);
+            if (onCancelReply) onCancelReply();
           } finally {
             setIsSending(false);
           }
@@ -116,10 +137,21 @@ export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = f
     setIsSending(true);
     try {
       const type = mediaPreview ? 'image' : 'text';
-      await onSend(text.trim(), mediaPreview || undefined, type);
+      const replyObj = replyingToMessage
+        ? {
+            id: replyingToMessage.id,
+            senderName: replyingToMessage.replyTo?.senderName || otherParticipantName,
+            content: replyingToMessage.content || (replyingToMessage.type === 'image' ? '📷 Photo' : 'Voice message'),
+            mediaUrl: replyingToMessage.mediaUrl,
+            type: replyingToMessage.type,
+          }
+        : undefined;
+
+      await onSend(text.trim(), mediaPreview || undefined, type, replyObj);
       setText('');
       setMediaPreview(null);
       setShowEmojiPicker(false);
+      if (onCancelReply) onCancelReply();
     } finally {
       setIsSending(false);
     }
@@ -137,6 +169,38 @@ export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = f
 
   return (
     <div className="relative p-3 glass-panel border-t border-zinc-800">
+      {/* WhatsApp Style Quoted Reply Preview Bar */}
+      {replyingToMessage && !isRecording && (
+        <div className="mb-2.5 p-2.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-between shadow-md">
+          <div className="flex items-center space-x-3 min-w-0 flex-1">
+            <div className="w-1.5 h-9 bg-gradient-to-b from-indigo-500 to-violet-500 rounded-full flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center space-x-1 text-xs font-bold text-indigo-400">
+                <CornerUpLeft className="w-3.5 h-3.5" />
+                <span className="truncate">Replying to {replyingToMessage.replyTo?.senderName || otherParticipantName}</span>
+              </div>
+              <p className="text-xs text-zinc-300 truncate">
+                {replyingToMessage.type === 'audio'
+                  ? '🎙️ Voice message'
+                  : replyingToMessage.type === 'image'
+                  ? '📷 Photo'
+                  : replyingToMessage.content}
+              </p>
+            </div>
+          </div>
+          {onCancelReply && (
+            <button
+              type="button"
+              onClick={onCancelReply}
+              className="p-1 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition-colors ml-2"
+              title="Cancel Reply"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Emoji Quick Picker Dropdown */}
       {showEmojiPicker && !isRecording && (
         <div className="absolute bottom-full left-4 mb-2 p-2.5 glass-panel rounded-2xl border border-zinc-800 shadow-2xl flex items-center space-x-2 z-20">
@@ -247,7 +311,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ onSend, disabled = f
           {/* Main Text Input */}
           <input
             type="text"
-            placeholder="Write a message..."
+            placeholder={replyingToMessage ? `Replying to ${replyingToMessage.replyTo?.senderName || otherParticipantName}...` : 'Write a message...'}
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={disabled}
