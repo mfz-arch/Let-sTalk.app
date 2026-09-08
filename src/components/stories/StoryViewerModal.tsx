@@ -58,7 +58,6 @@ export const StoryViewerModal: React.FC = () => {
     setIsSending(true);
     try {
       const conv = await startConversationWithUser(activeStoryGroup.userId);
-      setActiveConversation(conv);
 
       await sendMessage(
         replyText,
@@ -67,7 +66,9 @@ export const StoryViewerModal: React.FC = () => {
         {
           storyId: currentSlide.id,
           storyMediaUrl: currentSlide.mediaUrl,
-        }
+        },
+        undefined,
+        conv
       );
 
       setReplyText('');

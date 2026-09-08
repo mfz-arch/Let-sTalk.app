@@ -19,7 +19,8 @@ interface ChatContextType {
     type?: 'text' | 'image' | 'audio' | 'story_reply',
     mediaUrl?: string,
     storyContext?: Message['storyContext'],
-    replyTo?: Message['replyTo']
+    replyTo?: Message['replyTo'],
+    overrideConv?: Conversation
   ) => Promise<void>;
   startConversationWithUser: (targetUserId: string) => Promise<Conversation>;
   markAsRead: (conversationId: string) => Promise<void>;
@@ -191,17 +192,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     type: 'text' | 'image' | 'audio' | 'story_reply' = 'text',
     mediaUrl?: string,
     storyContext?: Message['storyContext'],
-    replyTo?: Message['replyTo']
+    replyTo?: Message['replyTo'],
+    overrideConv?: Conversation
   ) => {
-    if (!user || !activeConversation) return;
+    const conv = overrideConv || activeConversation;
+    if (!user || !conv) return;
 
-    const receiver = activeConversation.participants.find((p) => p.id !== user.id);
-    if (!receiver) return;
+    const receiver = conv.participants.find((p) => p.id !== user.id);
+    const receiverId = receiver ? receiver.id : conv.participantIds?.find((id) => id !== user.id);
+    if (!receiverId) return;
 
     const newMsg = await chatService.sendMessage(
-      activeConversation.id,
+      conv.id,
       user.id,
-      receiver.id,
+      receiverId,
       content,
       type,
       mediaUrl,
@@ -209,17 +213,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       replyTo
     );
 
-    setMessages((prev) => [...prev, newMsg]);
+    if (activeConversation?.id === conv.id) {
+      setMessages((prev) => [...prev, newMsg]);
+    }
 
     // Emit send_message over socket for real-time delivery
     if (socket) {
-      socket.emit('send_message', { conversationId: activeConversation.id, message: newMsg });
+      socket.emit('send_message', { conversationId: conv.id, message: newMsg });
     }
 
     // Update conversation list
     setConversations((prev) =>
       prev.map((c) =>
-        c.id === activeConversation.id
+        c.id === conv.id
           ? { ...c, lastMessage: newMsg, updatedAt: newMsg.createdAt }
           : c
       )
