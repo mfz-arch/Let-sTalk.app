@@ -102,15 +102,16 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         if (audioBase64) {
           setIsSending(true);
           try {
-            const replyObj = replyingToMessage
-              ? {
-                  id: replyingToMessage.id,
-                  senderName: replyingToMessage.replyTo?.senderName || otherParticipantName,
-                  content: replyingToMessage.content || 'Voice message',
-                  mediaUrl: replyingToMessage.mediaUrl,
-                  type: replyingToMessage.type,
-                }
-              : undefined;
+            const replyObj =
+              replyingToMessage && replyingToMessage.id
+                ? {
+                    id: replyingToMessage.id,
+                    senderName: otherParticipantName || 'User',
+                    content: replyingToMessage.content || 'Voice message',
+                    mediaUrl: replyingToMessage.mediaUrl,
+                    type: replyingToMessage.type,
+                  }
+                : undefined;
 
             await onSend('🎙️ Voice message', audioBase64, 'audio', replyObj);
             if (onCancelReply) onCancelReply();
@@ -137,15 +138,16 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     setIsSending(true);
     try {
       const type = mediaPreview ? 'image' : 'text';
-      const replyObj = replyingToMessage
-        ? {
-            id: replyingToMessage.id,
-            senderName: replyingToMessage.replyTo?.senderName || otherParticipantName,
-            content: replyingToMessage.content || (replyingToMessage.type === 'image' ? '📷 Photo' : 'Voice message'),
-            mediaUrl: replyingToMessage.mediaUrl,
-            type: replyingToMessage.type,
-          }
-        : undefined;
+      const replyObj =
+        replyingToMessage && replyingToMessage.id
+          ? {
+              id: replyingToMessage.id,
+              senderName: otherParticipantName || 'User',
+              content: replyingToMessage.content || (replyingToMessage.type === 'image' ? '📷 Photo' : 'Voice message'),
+              mediaUrl: replyingToMessage.mediaUrl,
+              type: replyingToMessage.type,
+            }
+          : undefined;
 
       await onSend(text.trim(), mediaPreview || undefined, type, replyObj);
       setText('');
@@ -177,7 +179,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             <div className="min-w-0 flex-1">
               <div className="flex items-center space-x-1 text-xs font-bold text-emerald-700">
                 <CornerUpLeft className="w-3.5 h-3.5" />
-                <span className="truncate">Replying to {replyingToMessage.replyTo?.senderName || otherParticipantName}</span>
+                <span className="truncate">Replying to {otherParticipantName}</span>
               </div>
               <p className="text-xs text-slate-600 truncate">
                 {replyingToMessage.type === 'audio'
@@ -311,7 +313,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           {/* Main Text Input */}
           <input
             type="text"
-            placeholder={replyingToMessage ? `Replying to ${replyingToMessage.replyTo?.senderName || otherParticipantName}...` : 'Write a message...'}
+            placeholder={replyingToMessage ? `Replying to ${otherParticipantName}...` : 'Write a message...'}
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={disabled}

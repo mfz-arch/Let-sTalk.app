@@ -15,19 +15,24 @@ export async function GET(request: Request) {
 
     const messages = await Message.find({ conversationId }).sort({ createdAt: 1 });
 
-    const formatted = messages.map((m) => ({
-      id: m._id.toString(),
-      conversationId: m.conversationId.toString(),
-      senderId: m.senderId.toString(),
-      receiverId: m.receiverId.toString(),
-      content: m.content,
-      type: m.type,
-      mediaUrl: m.mediaUrl,
-      storyContext: m.storyContext,
-      replyTo: m.replyTo,
-      createdAt: m.createdAt,
-      status: m.status,
-    }));
+    const formatted = messages.map((m) => {
+      const isValidReply =
+        m.replyTo && (Boolean(m.replyTo.senderName) || Boolean(m.replyTo.content) || Boolean(m.replyTo.id));
+
+      return {
+        id: m._id.toString(),
+        conversationId: m.conversationId.toString(),
+        senderId: m.senderId.toString(),
+        receiverId: m.receiverId.toString(),
+        content: m.content,
+        type: m.type,
+        mediaUrl: m.mediaUrl,
+        storyContext: m.storyContext,
+        replyTo: isValidReply ? m.replyTo : undefined,
+        createdAt: m.createdAt,
+        status: m.status,
+      };
+    });
 
     return NextResponse.json({ messages: formatted });
   } catch (error: any) {
@@ -45,6 +50,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Conversation and User IDs required' }, { status: 400 });
     }
 
+    const isValidReply =
+      replyTo && (Boolean(replyTo.senderName) || Boolean(replyTo.content) || Boolean(replyTo.id));
+
+    const cleanReplyTo = isValidReply ? replyTo : undefined;
+
     const message = await Message.create({
       conversationId,
       senderId,
@@ -53,7 +63,7 @@ export async function POST(request: Request) {
       type,
       mediaUrl,
       storyContext,
-      replyTo,
+      replyTo: cleanReplyTo,
       status: 'sent',
     });
 

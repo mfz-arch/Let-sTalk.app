@@ -111,28 +111,19 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
               }`}
             >
               {/* WhatsApp Style Quoted Reply Card inside Message Bubble */}
-              {message.replyTo && (
-                <div
-                  className={`mb-2.5 p-2.5 rounded-xl border flex items-center space-x-2.5 overflow-hidden ${
-                    isMe
-                      ? 'bg-emerald-600/30 border-emerald-400/30 text-white'
-                      : 'bg-slate-100 border-slate-200 text-slate-800'
-                  }`}
-                >
+              {message.replyTo &&
+                Boolean(message.replyTo.senderName || message.replyTo.content) && (
                   <div
-                    className={`w-1 h-9 rounded-full flex-shrink-0 ${
-                      isMe ? 'bg-white' : 'bg-emerald-500'
+                    className={`mb-2 p-2 rounded-lg text-xs overflow-hidden ${
+                      isMe
+                        ? 'bg-black/20 border-l-4 border-emerald-200 text-white'
+                        : 'bg-slate-100 border-l-4 border-emerald-600 text-slate-800'
                     }`}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p
-                      className={`text-xs font-bold truncate ${
-                        isMe ? 'text-white' : 'text-emerald-700'
-                      }`}
-                    >
-                      {message.replyTo.senderName}
+                  >
+                    <p className={`font-bold text-[11px] truncate ${isMe ? 'text-emerald-100' : 'text-emerald-700'}`}>
+                      {message.replyTo.senderName || 'Message'}
                     </p>
-                    <p className={`text-xs truncate ${isMe ? 'text-emerald-100' : 'text-slate-600'}`}>
+                    <p className={`truncate text-xs ${isMe ? 'text-white/90' : 'text-slate-600'}`}>
                       {message.replyTo.type === 'audio'
                         ? '🎙️ Voice message'
                         : message.replyTo.type === 'image'
@@ -140,8 +131,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
                         : message.replyTo.content}
                     </p>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Story Reply Context Header */}
               {message.type === 'story_reply' && message.storyContext && (
