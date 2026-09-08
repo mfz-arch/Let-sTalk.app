@@ -44,12 +44,16 @@ export const Avatar: React.FC<AvatarProps> = ({
   hasUnseenStory = true,
   onClick,
 }) => {
+  const storyRingClass = hasStoryRing
+    ? hasUnseenStory
+      ? 'p-[2.5px] rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 shadow-md shadow-purple-500/20'
+      : 'p-[2px] rounded-full border-2 border-zinc-700/60 opacity-60'
+    : '';
+
   return (
     <div
       onClick={onClick}
-      className={`relative inline-block flex-shrink-0 cursor-pointer ${
-        hasStoryRing ? 'p-0.5 rounded-full ring-2 ' + (hasUnseenStory ? 'ring-indigo-500 story-ring-unseen' : 'ring-zinc-700') : ''
-      } ${className}`}
+      className={`relative inline-block flex-shrink-0 cursor-pointer ${storyRingClass} ${className}`}
     >
       <div className={`relative overflow-hidden rounded-full bg-zinc-800 border border-zinc-700/50 ${sizeClasses[size]}`}>
         {src ? (

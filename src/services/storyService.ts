@@ -2,12 +2,28 @@ import { UserStoryGroup } from '../types/story';
 import { User } from '../types/user';
 
 class StoryService {
+  private getSeenStoryUserIds(): string[] {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = localStorage.getItem('seenStoryUserIds');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
   async getStories(): Promise<UserStoryGroup[]> {
     try {
       const res = await fetch('/api/stories', { cache: 'no-store' });
       if (!res.ok) return [];
       const data = await res.json();
-      return data.stories || [];
+      const rawStories: UserStoryGroup[] = data.stories || [];
+
+      const seenIds = this.getSeenStoryUserIds();
+      return rawStories.map((group) => ({
+        ...group,
+        hasUnseen: !seenIds.includes(group.userId),
+      }));
     } catch (err) {
       console.error('getStories error:', err);
       return [];
@@ -52,8 +68,17 @@ class StoryService {
     }
   }
 
-  async markStorySeen(userId: string): Promise<void> {
-    // No-op for now
+  markStorySeen(userId: string): void {
+    if (typeof window === 'undefined' || !userId) return;
+    try {
+      const seenIds = this.getSeenStoryUserIds();
+      if (!seenIds.includes(userId)) {
+        seenIds.push(userId);
+        localStorage.setItem('seenStoryUserIds', JSON.stringify(seenIds));
+      }
+    } catch (err) {
+      console.error('markStorySeen error:', err);
+    }
   }
 }
 

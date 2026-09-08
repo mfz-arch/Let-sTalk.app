@@ -59,6 +59,11 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setActiveSlideIndex(slideIndex);
     setIsViewerOpen(true);
     storyService.markStorySeen(group.userId);
+
+    // Immediately update local stories state to set hasUnseen = false
+    setStories((prevStories) =>
+      prevStories.map((s) => (s.userId === group.userId ? { ...s, hasUnseen: false } : s))
+    );
   };
 
   const closeStoryViewer = () => {

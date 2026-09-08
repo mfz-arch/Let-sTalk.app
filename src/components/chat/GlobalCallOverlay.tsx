@@ -26,7 +26,31 @@ export const GlobalCallOverlay: React.FC = () => {
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Attach local stream to video element
+  // Dynamically update remote video stream whenever remoteStream arrives or updates
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch((err) => console.log('Remote video play error:', err));
+    }
+  }, [remoteStream]);
+
+  // Dynamically update remote audio stream
+  useEffect(() => {
+    if (remoteAudioRef.current && remoteStream) {
+      remoteAudioRef.current.srcObject = remoteStream;
+      remoteAudioRef.current.play().catch((err) => console.log('Remote audio play error:', err));
+    }
+  }, [remoteStream]);
+
+  // Dynamically update local video stream
+  useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+      localVideoRef.current.play().catch((err) => console.log('Local video play error:', err));
+    }
+  }, [localStream]);
+
+  // Ref callbacks for initial mounting
   const setLocalVideoNode = (node: HTMLVideoElement | null) => {
     localVideoRef.current = node;
     if (node && localStream) {
@@ -35,7 +59,6 @@ export const GlobalCallOverlay: React.FC = () => {
     }
   };
 
-  // Attach remote stream to video & audio elements
   const setRemoteVideoNode = (node: HTMLVideoElement | null) => {
     remoteVideoRef.current = node;
     if (node && remoteStream) {

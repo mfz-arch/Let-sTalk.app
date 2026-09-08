@@ -205,8 +205,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const pc = new RTCPeerConnection(ICE_SERVERS);
       peerConnectionRef.current = pc;
 
-      // Add local tracks to peer connection
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+      let callId: string | null = null;
+      const iceCandidatesQueue: RTCIceCandidate[] = [];
 
       // Handle incoming remote media tracks
       pc.ontrack = (event) => {
@@ -220,6 +220,29 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
         }
       };
+
+      // Register ICE candidate handler EARLY to catch all candidates
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          if (callId) {
+            fetch('/api/calls/signal', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'ice_candidate',
+                callId,
+                userId: user.id,
+                candidate: event.candidate,
+              }),
+            }).catch(console.error);
+          } else {
+            iceCandidatesQueue.push(event.candidate);
+          }
+        }
+      };
+
+      // Add local tracks to peer connection
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
       // Create SDP Offer
       const offer = await pc.createOffer();
@@ -242,24 +265,24 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (res.ok) {
         const data = await res.json();
+        callId = data.callId;
         setActiveCall(data.call);
         setCallRole('caller');
 
-        // Send local ICE candidates to MongoDB Atlas
-        pc.onicecandidate = (event) => {
-          if (event.candidate) {
-            fetch('/api/calls/signal', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                action: 'ice_candidate',
-                callId: data.callId,
-                userId: user.id,
-                candidate: event.candidate,
-              }),
-            }).catch(console.error);
-          }
-        };
+        // Flush buffered early ICE candidates
+        for (const candidate of iceCandidatesQueue) {
+          fetch('/api/calls/signal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'ice_candidate',
+              callId,
+              userId: user.id,
+              candidate,
+            }),
+          }).catch(console.error);
+        }
+        iceCandidatesQueue.length = 0;
       }
     } catch (err: any) {
       console.error('Initiate Call Error:', err);
@@ -284,7 +307,21 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const pc = new RTCPeerConnection(ICE_SERVERS);
       peerConnectionRef.current = pc;
 
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+      // Register ICE candidate callback EARLY
+      pc.onicecandidate = (event) => {
+        if (event.candidate && activeCall.id) {
+          fetch('/api/calls/signal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'ice_candidate',
+              callId: activeCall.id,
+              userId: user.id,
+              candidate: event.candidate,
+            }),
+          }).catch(console.error);
+        }
+      };
 
       pc.ontrack = (event) => {
         if (event.streams && event.streams[0]) {
@@ -297,6 +334,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
         }
       };
+
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
       // Set remote description (Caller's Offer)
       if (activeCall.offer) {
@@ -320,21 +359,6 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       setActiveCall((prev) => (prev ? { ...prev, status: 'connected' } : null));
-
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          fetch('/api/calls/signal', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'ice_candidate',
-              callId: activeCall.id,
-              userId: user.id,
-              candidate: event.candidate,
-            }),
-          }).catch(console.error);
-        }
-      };
     } catch (err: any) {
       console.error('Accept Call Error:', err);
       alert(`Could not answer call: ${err.message || 'Permission denied'}`);
