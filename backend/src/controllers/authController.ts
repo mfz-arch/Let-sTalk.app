@@ -11,8 +11,22 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
       res.status(400).json({ message: 'Please provide all required fields' });
       return;
     }
+    const rawPhone = phoneNumber.trim().replace(/[\s\-\(\)]/g, '');
+    const strippedPhone = rawPhone.replace(/^0+/, '');
+    const zeroPhone = `0${strippedPhone}`;
 
-    const existingUser = await User.findOne({ phoneNumber, countryCode });
+    const rawCode = countryCode.trim();
+    const codeNoPlus = rawCode.replace(/^\+/, '');
+    const codeWithPlus = `+${codeNoPlus}`;
+
+    const existingUser = await User.findOne({
+      countryCode: { $in: [rawCode, codeNoPlus, codeWithPlus] },
+      $or: [
+        { phoneNumber: rawPhone },
+        { phoneNumber: strippedPhone },
+        { phoneNumber: zeroPhone },
+      ],
+    });
     if (existingUser) {
       res.status(400).json({ message: 'User with this phone number already exists' });
       return;
@@ -24,8 +38,8 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     const user = await User.create({
       name,
       username,
-      phoneNumber,
-      countryCode,
+      phoneNumber: rawPhone,
+      countryCode: rawCode,
       password,
       avatar,
     });
@@ -59,7 +73,22 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const user = await User.findOne({ phoneNumber, countryCode });
+    const rawPhone = phoneNumber.trim().replace(/[\s\-\(\)]/g, '');
+    const strippedPhone = rawPhone.replace(/^0+/, '');
+    const zeroPhone = `0${strippedPhone}`;
+
+    const rawCode = countryCode.trim();
+    const codeNoPlus = rawCode.replace(/^\+/, '');
+    const codeWithPlus = `+${codeNoPlus}`;
+
+    const user = await User.findOne({
+      countryCode: { $in: [rawCode, codeNoPlus, codeWithPlus] },
+      $or: [
+        { phoneNumber: rawPhone },
+        { phoneNumber: strippedPhone },
+        { phoneNumber: zeroPhone },
+      ],
+    });
     if (user && (await user.matchPassword(password))) {
       const token = generateToken(user._id.toString());
 

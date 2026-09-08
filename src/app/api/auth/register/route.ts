@@ -12,11 +12,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
     }
 
-    const cleanPhone = phoneNumber.trim();
-    const cleanCode = countryCode.trim();
+    const rawPhone = phoneNumber.trim().replace(/[\s\-\(\)]/g, '');
+    const strippedPhone = rawPhone.replace(/^0+/, '');
+    const zeroPhone = `0${strippedPhone}`;
+
+    const rawCode = countryCode.trim();
+    const codeNoPlus = rawCode.replace(/^\+/, '');
+    const codeWithPlus = `+${codeNoPlus}`;
 
     // Check if user exists in MongoDB Atlas
-    let existing = await User.findOne({ phoneNumber: cleanPhone, countryCode: cleanCode });
+    let existing = await User.findOne({
+      countryCode: { $in: [rawCode, codeNoPlus, codeWithPlus] },
+      $or: [
+        { phoneNumber: rawPhone },
+        { phoneNumber: strippedPhone },
+        { phoneNumber: zeroPhone },
+      ],
+    });
     if (existing) {
       return NextResponse.json({
         user: {
@@ -42,8 +54,8 @@ export async function POST(request: Request) {
     const user = await User.create({
       name: name.trim(),
       username,
-      phoneNumber: cleanPhone,
-      countryCode: cleanCode,
+      phoneNumber: rawPhone,
+      countryCode: rawCode,
       password: hashedPassword,
       avatar,
       bio: "Hey there! I am using Let'sTalk.",

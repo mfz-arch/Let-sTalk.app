@@ -12,11 +12,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Phone number and password required' }, { status: 400 });
     }
 
-    const cleanPhone = phoneNumber.trim();
-    const cleanCode = countryCode.trim();
+    const rawPhone = phoneNumber.trim().replace(/[\s\-\(\)]/g, '');
+    const strippedPhone = rawPhone.replace(/^0+/, '');
+    const zeroPhone = `0${strippedPhone}`;
 
-    // Find account in MongoDB Atlas
-    const user = await User.findOne({ phoneNumber: cleanPhone, countryCode: cleanCode });
+    const rawCode = countryCode.trim();
+    const codeNoPlus = rawCode.replace(/^\+/, '');
+    const codeWithPlus = `+${codeNoPlus}`;
+
+    // Find account in MongoDB Atlas with flexible phone and country code matching
+    const user = await User.findOne({
+      countryCode: { $in: [rawCode, codeNoPlus, codeWithPlus] },
+      $or: [
+        { phoneNumber: rawPhone },
+        { phoneNumber: strippedPhone },
+        { phoneNumber: zeroPhone },
+      ],
+    });
 
     // If account does not exist, return 404 Account Not Found error
     if (!user) {
