@@ -79,7 +79,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
         {/* CALL LOG BUBBLE */}
         {isCallLog ? (
           <div className="flex justify-center my-1">
-            <div className="bg-zinc-900/90 border border-zinc-800 text-zinc-300 text-xs px-4 py-2 rounded-2xl flex items-center space-x-2 shadow-sm">
+            <div className="bg-[#16181F] border border-white/[0.07] text-zinc-300 text-xs px-4 py-2 rounded-xl flex items-center space-x-2 shadow-sm">
               {message.content.includes('Missed') ? (
                 <PhoneMissed className="w-4 h-4 text-rose-400" />
               ) : (
@@ -96,7 +96,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
               <button
                 type="button"
                 onClick={() => onReply(message)}
-                className="opacity-0 group-hover/msg:opacity-100 p-1.5 text-zinc-400 hover:text-white bg-zinc-800/80 rounded-full transition-opacity shadow-sm"
+                className="opacity-0 group-hover/msg:opacity-100 p-1.5 text-zinc-400 hover:text-white bg-[#1A1D24] border border-white/[0.07] rounded-full transition-opacity shadow-sm"
                 title="Reply"
               >
                 <CornerUpLeft className="w-3.5 h-3.5" />
@@ -106,13 +106,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
             <div
               className={`rounded-2xl p-3.5 shadow-md relative transition-all w-full ${
                 isMe
-                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-br-none shadow-indigo-600/15'
-                  : 'bg-zinc-800/90 text-zinc-100 border border-zinc-700/50 rounded-bl-none'
+                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-br-xs shadow-indigo-600/15'
+                  : 'bg-[#1A1D24] text-zinc-100 border border-white/[0.07] rounded-bl-xs'
               }`}
             >
               {/* WhatsApp Style Quoted Reply Card inside Message Bubble */}
               {message.replyTo && (
-                <div className="mb-2.5 p-2.5 rounded-xl bg-black/30 backdrop-blur-sm border border-white/10 flex items-center space-x-2.5 overflow-hidden">
+                <div className="mb-2.5 p-2.5 rounded-xl bg-black/30 border border-white/10 flex items-center space-x-2.5 overflow-hidden">
                   <div className="w-1 h-9 bg-emerald-400 rounded-full flex-shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-bold text-emerald-400 truncate">
@@ -131,7 +131,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
 
               {/* Story Reply Context Header */}
               {message.type === 'story_reply' && message.storyContext && (
-                <div className="mb-2.5 p-2 rounded-xl bg-black/30 backdrop-blur-sm border border-white/10 flex items-center space-x-2.5">
+                <div className="mb-2.5 p-2 rounded-xl bg-black/30 border border-white/10 flex items-center space-x-2.5">
                   <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
                     <Image
                       src={message.storyContext.storyMediaUrl}
@@ -164,7 +164,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
 
               {/* WhatsApp Style Audio Voice Note Player */}
               {isAudio && message.mediaUrl && (
-                <div className="flex items-center space-x-3 py-1.5 px-2.5 min-w-[240px] max-w-[300px] bg-black/25 rounded-2xl border border-white/10">
+                <div className="flex items-center space-x-3 py-1.5 px-2.5 min-w-[240px] max-w-[300px] bg-black/25 rounded-xl border border-white/10">
                   <button
                     type="button"
                     onClick={toggleAudio}
@@ -241,7 +241,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
               <button
                 type="button"
                 onClick={() => onReply(message)}
-                className="opacity-0 group-hover/msg:opacity-100 p-1.5 text-zinc-400 hover:text-white bg-zinc-800/80 rounded-full transition-opacity shadow-sm"
+                className="opacity-0 group-hover/msg:opacity-100 p-1.5 text-zinc-400 hover:text-white bg-[#1A1D24] border border-white/[0.07] rounded-full transition-opacity shadow-sm"
                 title="Reply"
               >
                 <CornerUpLeft className="w-3.5 h-3.5" />

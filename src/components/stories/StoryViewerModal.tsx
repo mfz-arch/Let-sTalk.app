@@ -105,14 +105,14 @@ export const StoryViewerModal: React.FC = () => {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="relative z-10 w-full max-w-sm h-[85vh] max-h-[720px] bg-zinc-950 rounded-3xl overflow-hidden shadow-2xl border border-zinc-800 flex flex-col justify-between"
+          className="relative z-10 w-full max-w-sm h-[85vh] max-h-[720px] bg-[#0B0C10] rounded-2xl overflow-hidden shadow-2xl border border-white/[0.07] flex flex-col justify-between"
           onMouseDown={() => setIsPaused(true)}
           onMouseUp={() => setIsPaused(false)}
           onTouchStart={() => setIsPaused(true)}
           onTouchEnd={() => setIsPaused(false)}
         >
           {/* Background High-Res Story Image */}
-          <div className="absolute inset-0 z-0 bg-zinc-900 flex items-center justify-center">
+          <div className="absolute inset-0 z-0 bg-[#0B0C10] flex items-center justify-center">
             <img
               src={currentSlide.mediaUrl}
               alt={currentSlide.caption || 'Story slide'}
@@ -208,7 +208,7 @@ export const StoryViewerModal: React.FC = () => {
           {/* Story Caption & Action Form */}
           <div className="relative z-10 p-4 space-y-3 mt-auto">
             {currentSlide.caption && (
-              <p className="text-sm font-medium text-white text-center drop-shadow-md px-3 bg-black/50 backdrop-blur-md py-2.5 rounded-2xl border border-white/10">
+              <p className="text-sm font-medium text-white text-center drop-shadow-md px-3 bg-black/50 backdrop-blur-md py-2.5 rounded-xl border border-white/10">
                 {currentSlide.caption}
               </p>
             )}
@@ -222,12 +222,12 @@ export const StoryViewerModal: React.FC = () => {
                     placeholder={`Reply to ${activeStoryGroup.user.name.split(' ')[0]}...`}
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
-                    className="flex-1 bg-black/60 backdrop-blur-md border border-white/20 rounded-full px-4 py-2.5 text-xs text-white placeholder-white/60 outline-none focus:border-indigo-400"
+                    className="flex-1 bg-black/60 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 text-xs text-white placeholder-white/60 outline-none focus:border-indigo-400"
                   />
                   <button
                     type="submit"
                     disabled={!replyText.trim() || isSending}
-                    className="p-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-full transition-colors shadow-lg"
+                    className="p-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl transition-colors shadow-lg"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -238,7 +238,7 @@ export const StoryViewerModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => toggleLikeStory(currentSlide.id)}
-                className={`p-2.5 rounded-full backdrop-blur-md border transition-transform active:scale-90 ${
+                className={`p-2.5 rounded-xl backdrop-blur-md border transition-transform active:scale-90 ${
                   isLiked
                     ? 'bg-rose-600 text-white border-rose-500 shadow-lg shadow-rose-600/30'
                     : 'bg-black/50 text-white/80 border-white/20 hover:text-white'
@@ -256,27 +256,27 @@ export const StoryViewerModal: React.FC = () => {
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 100, opacity: 0 }}
-              className="absolute inset-x-0 bottom-0 z-30 bg-zinc-900/95 backdrop-blur-xl rounded-t-3xl p-5 border-t border-zinc-800 space-y-4 max-h-[60%]"
+              className="absolute inset-x-0 bottom-0 z-30 bg-[#12141A]/95 backdrop-blur-xl rounded-t-2xl p-5 border-t border-white/[0.07] space-y-4 max-h-[60%]"
             >
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
                 <div className="flex items-center space-x-2">
                   <Eye className="w-4 h-4 text-indigo-400" />
-                  <h3 className="text-sm font-bold text-white">Story Views & Likes</h3>
+                  <h3 className="text-xs font-bold text-white">Story Views & Likes</h3>
                 </div>
                 <button
                   onClick={() => setShowViewersList(false)}
-                  className="p-1 text-zinc-400 hover:text-white rounded-full"
+                  className="p-1 text-zinc-400 hover:text-white rounded-lg"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="space-y-3 overflow-y-auto max-h-48">
+              <div className="space-y-2 overflow-y-auto max-h-48">
                 {currentSlide.viewers && currentSlide.viewers.length > 0 ? (
                   currentSlide.viewers.map((viewer: any, vIdx: number) => {
                     const viewerLiked = currentSlide.likes?.includes(viewer.userId);
                     return (
-                      <div key={vIdx} className="flex items-center justify-between p-2 rounded-xl bg-zinc-800/60">
+                      <div key={vIdx} className="flex items-center justify-between p-2 rounded-xl bg-[#1A1D24] border border-white/[0.07]">
                         <div className="flex items-center space-x-3">
                           <Avatar src={viewer.avatar || ''} alt={viewer.name || 'Viewer'} size="sm" />
                           <div>
@@ -291,7 +291,7 @@ export const StoryViewerModal: React.FC = () => {
                     );
                   })
                 ) : (
-                  <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-800/60">
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-[#1A1D24] border border-white/[0.07]">
                     <div className="flex items-center space-x-3">
                       <Avatar src={user?.avatar || ''} alt={user?.name || ''} size="sm" />
                       <div>

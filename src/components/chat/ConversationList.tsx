@@ -58,7 +58,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   }
 
   return (
-    <div className="space-y-1 p-2 overflow-y-auto max-h-[calc(100vh-140px)]">
+    <div className="space-y-1 p-2 overflow-y-auto max-h-[calc(100vh-140px)] no-scrollbar">
       {conversations.map((conv) => {
         const otherParticipant = conv.participants.find((p) => p.id !== user?.id) || conv.participants[0];
         const isActive = activeId === conv.id;
@@ -71,10 +71,10 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           <div
             key={conv.id}
             onClick={() => onSelect(conv)}
-            className={`flex items-center space-x-3.5 p-3 rounded-2xl cursor-pointer transition-all ${
+            className={`flex items-center space-x-3 p-2.5 rounded-xl cursor-pointer transition-all ${
               isActive
-                ? 'bg-indigo-600/20 border border-indigo-500/30 shadow-md'
-                : 'hover:bg-zinc-800/60 border border-transparent'
+                ? 'bg-indigo-500/12 border border-indigo-500/25 shadow-sm'
+                : 'hover:bg-white/[0.04] border border-transparent'
             }`}
           >
             <Avatar
@@ -87,29 +87,29 @@ export const ConversationList: React.FC<ConversationListProps> = ({
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-zinc-100 truncate">
+                <h4 className="text-xs font-semibold text-zinc-100 truncate">
                   {otherParticipant?.name}
                 </h4>
                 {lastMsg && (
-                  <span className="text-[10px] text-zinc-400 font-medium">
+                  <span className="text-[10px] text-zinc-500 font-medium ml-2 flex-shrink-0">
                     {new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center justify-between mt-1">
-                <p className="text-xs text-zinc-400 truncate pr-2">
+              <div className="flex items-center justify-between mt-0.5">
+                <p className="text-xs text-zinc-400 truncate pr-2 font-normal">
                   {lastMsg?.type === 'story_reply' ? (
-                    <span className="italic text-indigo-400">Replied to story...</span>
+                    <span className="italic text-indigo-400 font-medium">Replied to story...</span>
                   ) : lastMsg?.type === 'image' ? (
-                    <span className="italic text-zinc-300">📷 Shared photo</span>
+                    <span className="italic text-zinc-300">📷 Photo</span>
                   ) : (
                     lastMsg?.content || 'No messages yet'
                   )}
                 </p>
 
                 {conv.unreadCount > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center shadow-md flex-shrink-0">
+                  <span className="min-w-[18px] h-[18px] rounded-full bg-indigo-500 text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-sm flex-shrink-0">
                     {conv.unreadCount}
                   </span>
                 )}

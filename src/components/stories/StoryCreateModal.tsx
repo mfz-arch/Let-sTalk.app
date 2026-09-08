@@ -56,7 +56,7 @@ export const StoryCreateModal: React.FC = () => {
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Selected Image Preview */}
-        <div className="relative w-full h-72 rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 flex items-center justify-center group">
+        <div className="relative w-full h-72 rounded-xl overflow-hidden bg-[#1A1D24] border border-white/[0.07] flex items-center justify-center group">
           <Image
             src={selectedImage}
             alt="Story Preview"
@@ -65,7 +65,7 @@ export const StoryCreateModal: React.FC = () => {
             unoptimized
           />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <label className="cursor-pointer bg-zinc-900/90 text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center space-x-2 border border-zinc-700 hover:bg-zinc-800">
+            <label className="cursor-pointer bg-[#12141A]/90 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center space-x-2 border border-white/10 hover:bg-[#1A1D24]">
               <Upload className="w-4 h-4 text-indigo-400" />
               <span>Change Image</span>
               <input
@@ -89,7 +89,7 @@ export const StoryCreateModal: React.FC = () => {
               <div
                 key={i}
                 onClick={() => setSelectedImage(imgUrl)}
-                className={`relative h-16 rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${
+                className={`relative h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
                   selectedImage === imgUrl ? 'border-indigo-500 scale-95' : 'border-transparent opacity-70 hover:opacity-100'
                 }`}
               >
@@ -109,7 +109,7 @@ export const StoryCreateModal: React.FC = () => {
             placeholder="Add a catchy story caption..."
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
-            className="w-full glass-input px-4 py-2.5 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 outline-none border border-zinc-800 focus:border-indigo-500"
+            className="w-full bg-[#1A1D24] px-4 py-2.5 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 outline-none border border-white/[0.07] focus:border-indigo-500/50 transition-colors"
           />
         </div>
 

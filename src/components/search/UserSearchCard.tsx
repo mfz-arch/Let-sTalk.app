@@ -13,7 +13,7 @@ interface UserSearchCardProps {
 
 export const UserSearchCard: React.FC<UserSearchCardProps> = ({ user, onMessageClick }) => {
   return (
-    <div className="glass-card rounded-2xl p-4 flex items-center justify-between transition-all hover:border-zinc-700/80 hover:shadow-lg">
+    <div className="bg-[#1A1D24] rounded-xl p-4 border border-white/[0.07] flex items-center justify-between transition-all hover:border-white/15 shadow-sm">
       <div className="flex items-center space-x-3.5 min-w-0">
         <Avatar
           src={user.avatar}

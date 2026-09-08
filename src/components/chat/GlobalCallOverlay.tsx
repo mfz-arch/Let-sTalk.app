@@ -105,7 +105,7 @@ export const GlobalCallOverlay: React.FC = () => {
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative z-10 w-full max-w-sm h-[480px] glass-panel rounded-3xl overflow-hidden shadow-2xl border border-indigo-500/40 flex flex-col justify-between p-6 text-center"
+            className="relative z-10 w-full max-w-sm h-[480px] bg-[#12141A] rounded-2xl overflow-hidden shadow-2xl border border-indigo-500/40 flex flex-col justify-between p-6 text-center"
           >
             <div className="space-y-1">
               <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-400">
@@ -164,7 +164,7 @@ export const GlobalCallOverlay: React.FC = () => {
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative z-10 w-full max-w-sm h-[520px] glass-panel rounded-3xl overflow-hidden shadow-2xl border border-zinc-800 flex flex-col justify-between p-6 text-center"
+            className="relative z-10 w-full max-w-sm h-[520px] bg-[#12141A] rounded-2xl overflow-hidden shadow-2xl border border-white/[0.07] flex flex-col justify-between p-6 text-center"
           >
             {/* Real-time Video Canvas background if Video Call */}
             {isVideo && (
@@ -172,7 +172,7 @@ export const GlobalCallOverlay: React.FC = () => {
                 ref={setRemoteVideoNode}
                 autoPlay
                 playsInline
-                className={`absolute inset-0 w-full h-full object-cover z-0 rounded-3xl transition-opacity duration-300 ${
+                className={`absolute inset-0 w-full h-full object-cover z-0 rounded-2xl transition-opacity duration-300 ${
                   remoteStream ? 'opacity-100' : 'opacity-0'
                 }`}
               />
@@ -180,7 +180,7 @@ export const GlobalCallOverlay: React.FC = () => {
 
             {/* Small Local Video Pip Preview */}
             {isVideo && localStream && (
-              <div className="absolute top-4 right-4 w-28 h-36 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl z-20 bg-zinc-900">
+              <div className="absolute top-4 right-4 w-28 h-36 rounded-xl overflow-hidden border-2 border-white/20 shadow-2xl z-20 bg-zinc-900">
                 <video
                   ref={setLocalVideoNode}
                   autoPlay
@@ -241,7 +241,7 @@ export const GlobalCallOverlay: React.FC = () => {
               <button
                 onClick={toggleMute}
                 className={`p-3.5 rounded-full transition-colors ${
-                  isMuted ? 'bg-amber-500 text-white' : 'bg-zinc-800/90 text-zinc-300 hover:bg-zinc-700'
+                  isMuted ? 'bg-amber-500 text-white' : 'bg-[#1A1D24] text-zinc-300 hover:bg-[#222630] border border-white/[0.07]'
                 }`}
                 title={isMuted ? 'Unmute' : 'Mute'}
               >
@@ -262,7 +262,7 @@ export const GlobalCallOverlay: React.FC = () => {
                 <button
                   onClick={toggleVideo}
                   className={`p-3.5 rounded-full transition-colors ${
-                    isVideoOff ? 'bg-amber-500 text-white' : 'bg-zinc-800/90 text-zinc-300 hover:bg-zinc-700'
+                    isVideoOff ? 'bg-amber-500 text-white' : 'bg-[#1A1D24] text-zinc-300 hover:bg-[#222630] border border-white/[0.07]'
                   }`}
                   title={isVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
                 >
@@ -270,7 +270,7 @@ export const GlobalCallOverlay: React.FC = () => {
                 </button>
               ) : (
                 <button
-                  className="p-3.5 bg-zinc-800/90 text-zinc-300 rounded-full hover:bg-zinc-700 transition-colors"
+                  className="p-3.5 bg-[#1A1D24] text-zinc-300 rounded-full hover:bg-[#222630] border border-white/[0.07] transition-colors"
                   title="Speaker"
                 >
                   <Volume2 className="w-5 h-5" />

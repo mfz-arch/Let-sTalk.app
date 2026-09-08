@@ -66,18 +66,18 @@ export default function SearchPage() {
           placeholder="Search by name, @username, or phone number..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full glass-input rounded-2xl pl-12 pr-4 py-3 text-sm text-zinc-100 placeholder-zinc-500 outline-none border border-zinc-800 focus:border-indigo-500 shadow-xl"
+          className="w-full bg-[#1A1D24] rounded-xl pl-12 pr-4 py-3 text-sm text-zinc-100 placeholder-zinc-500 outline-none border border-white/[0.07] focus:border-indigo-500/50 transition-colors shadow-sm"
         />
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-2 border-b border-zinc-800/80 pb-2">
+      <div className="flex space-x-1.5 bg-[#12141A] p-1 rounded-xl border border-white/[0.07] w-fit">
         <button
           onClick={() => setActiveTab('all')}
-          className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+          className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
             activeTab === 'all'
-              ? 'bg-indigo-600 text-white shadow-md'
-              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           All Users ({results.length})
@@ -85,10 +85,10 @@ export default function SearchPage() {
 
         <button
           onClick={() => setActiveTab('online')}
-          className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-colors flex items-center space-x-1.5 ${
+          className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1.5 ${
             activeTab === 'online'
-              ? 'bg-emerald-600 text-white shadow-md'
-              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -101,11 +101,11 @@ export default function SearchPage() {
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+              <Skeleton key={i} className="h-20 w-full rounded-xl bg-[#1A1D24]" />
             ))}
           </div>
         ) : filteredResults.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center glass-panel rounded-3xl border border-zinc-800 space-y-3">
+          <div className="flex flex-col items-center justify-center p-12 text-center bg-[#12141A] rounded-2xl border border-white/[0.07] space-y-3">
             <UserCheck className="w-10 h-10 text-zinc-600" />
             <h3 className="text-sm font-semibold text-zinc-300">No registered users found</h3>
             <p className="text-xs text-zinc-500 max-w-xs">

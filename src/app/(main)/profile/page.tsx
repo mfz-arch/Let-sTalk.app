@@ -22,10 +22,10 @@ export default function ProfilePage() {
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-6 space-y-6">
       {/* Profile Header Banner Card */}
-      <div className="glass-panel rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl">
+      <div className="bg-[#12141A] rounded-2xl border border-white/[0.07] overflow-hidden shadow-xl">
         {/* Banner Cover */}
-        <div className="h-36 bg-gradient-to-r from-indigo-900 via-purple-900 to-violet-950 relative">
-          <div className="absolute inset-0 bg-black/20" />
+        <div className="h-36 bg-gradient-to-r from-indigo-950 via-slate-900 to-slate-950 relative">
+          <div className="absolute inset-0 bg-black/30" />
         </div>
 
         {/* Profile Details Container */}
@@ -37,7 +37,7 @@ export default function ProfilePage() {
               size="2xl"
               showStatus
               onlineStatus={user.onlineStatus}
-              className="ring-4 ring-zinc-950 shadow-2xl"
+              className="ring-4 ring-[#12141A] shadow-2xl"
             />
 
             <div className="flex items-center space-x-2">
@@ -73,12 +73,12 @@ export default function ProfilePage() {
               </p>
             )}
 
-            <div className="flex items-center space-x-4 pt-2 text-xs text-zinc-400">
-              <div className="flex items-center space-x-1.5 bg-zinc-900/80 px-3 py-1.5 rounded-full border border-zinc-800">
+            <div className="flex items-center space-x-3 pt-2 text-xs text-zinc-400">
+              <div className="flex items-center space-x-1.5 bg-[#1A1D24] px-3 py-1.5 rounded-full border border-white/[0.07]">
                 <Phone className="w-3.5 h-3.5 text-indigo-400" />
                 <span>{user.countryCode} {user.phoneNumber}</span>
               </div>
-              <div className="flex items-center space-x-1.5 bg-zinc-900/80 px-3 py-1.5 rounded-full border border-zinc-800">
+              <div className="flex items-center space-x-1.5 bg-[#1A1D24] px-3 py-1.5 rounded-full border border-white/[0.07]">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Verified User</span>
               </div>
@@ -88,13 +88,13 @@ export default function ProfilePage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-2 border-b border-zinc-800/80 pb-2">
+      <div className="flex space-x-1.5 bg-[#12141A] p-1 rounded-xl border border-white/[0.07] w-fit">
         <button
           onClick={() => setActiveTab('stories')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center space-x-1.5 ${
+          className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1.5 ${
             activeTab === 'stories'
-              ? 'bg-indigo-600 text-white shadow-md'
-              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <Sparkles className="w-3.5 h-3.5" />
@@ -103,10 +103,10 @@ export default function ProfilePage() {
 
         <button
           onClick={() => setActiveTab('settings')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors ${
+          className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
             activeTab === 'settings'
-              ? 'bg-indigo-600 text-white shadow-md'
-              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           Account Information
@@ -117,7 +117,7 @@ export default function ProfilePage() {
       {activeTab === 'stories' ? (
         <div className="space-y-3">
           {!myStoryGroup || myStoryGroup.slides.length === 0 ? (
-            <div className="glass-panel p-8 rounded-3xl border border-zinc-800 text-center space-y-2">
+            <div className="bg-[#12141A] p-8 rounded-2xl border border-white/[0.07] text-center space-y-2">
               <ImageIcon className="w-8 h-8 text-zinc-600 mx-auto" />
               <p className="text-sm text-zinc-300 font-semibold">No active stories posted</p>
               <p className="text-xs text-zinc-500">Share your first story with your friends using the Share Story button!</p>
@@ -128,7 +128,7 @@ export default function ProfilePage() {
                 <div
                   key={slide.id}
                   onClick={() => openStoryViewer(myStoryGroup, idx)}
-                  className="relative h-48 rounded-2xl overflow-hidden cursor-pointer group border border-zinc-800"
+                  className="relative h-48 rounded-xl overflow-hidden cursor-pointer group border border-white/[0.07]"
                 >
                   <Image src={slide.mediaUrl} alt="My story slide" fill className="object-cover group-hover:scale-105 transition-transform" unoptimized />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90" />
@@ -142,18 +142,18 @@ export default function ProfilePage() {
           )}
         </div>
       ) : (
-        <div className="glass-panel p-6 rounded-3xl border border-zinc-800 space-y-4">
-          <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">Account Credentials</h3>
+        <div className="bg-[#12141A] p-6 rounded-2xl border border-white/[0.07] space-y-4">
+          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Account Credentials</h3>
           <div className="space-y-3 text-xs text-zinc-300">
-            <div className="flex justify-between py-2 border-b border-zinc-800">
+            <div className="flex justify-between py-2 border-b border-white/[0.06]">
               <span className="text-zinc-500 font-medium">User ID</span>
               <span className="font-mono text-zinc-200">{user.id}</span>
             </div>
-            <div className="flex justify-between py-2 border-b border-zinc-800">
+            <div className="flex justify-between py-2 border-b border-white/[0.06]">
               <span className="text-zinc-500 font-medium">Country Code</span>
               <span className="font-semibold text-zinc-200">{user.countryCode}</span>
             </div>
-            <div className="flex justify-between py-2 border-b border-zinc-800">
+            <div className="flex justify-between py-2 border-b border-white/[0.06]">
               <span className="text-zinc-500 font-medium">Registered Phone</span>
               <span className="font-semibold text-zinc-200">{user.phoneNumber}</span>
             </div>
