@@ -37,7 +37,7 @@ export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({ selected, 
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-1.5 px-3 py-2.5 rounded-xl glass-input text-sm text-zinc-200 hover:border-zinc-700 transition-all cursor-pointer"
+        className="flex items-center space-x-1.5 px-3 py-2.5 rounded-xl bg-[#1A1D24] border border-white/[0.07] text-sm text-zinc-200 hover:border-white/20 transition-all cursor-pointer"
       >
         <span className="text-lg leading-none">{selected.flag}</span>
         <span className="font-semibold text-zinc-100">{selected.dialCode}</span>
@@ -45,7 +45,7 @@ export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({ selected, 
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-2 z-50 w-64 glass-panel rounded-2xl p-2 border border-zinc-800 shadow-2xl space-y-2 max-h-60 overflow-y-auto">
+        <div className="absolute left-0 top-full mt-2 z-50 w-64 bg-[#12141A] rounded-xl p-2 border border-white/[0.07] shadow-2xl space-y-2 max-h-60 overflow-y-auto">
           <div className="relative">
             <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-zinc-500" />
             <input
@@ -53,7 +53,7 @@ export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({ selected, 
               placeholder="Search country..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-zinc-950/80 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 outline-none focus:border-indigo-500"
+              className="w-full bg-[#1A1D24] border border-white/[0.07] rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 outline-none focus:border-indigo-500/50"
             />
           </div>
 

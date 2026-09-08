@@ -57,27 +57,23 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Decorative Gradients */}
-      <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="w-full max-w-md space-y-8 relative z-10 my-8">
+    <main className="min-h-screen bg-[#0B0C10] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      <div className="w-full max-w-md space-y-6 relative z-10 my-8">
         {/* Brand Header */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-600 to-violet-600 shadow-xl shadow-indigo-600/30 mb-2">
-            <MessageCircle className="w-9 h-9 text-white" />
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#1A1D24] border border-white/[0.07] shadow-sm mb-1">
+            <MessageCircle className="w-7 h-7 text-indigo-400" />
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-extrabold tracking-tight text-white">
             Join Let'sTalk
           </h1>
-          <p className="text-sm text-zinc-400">
+          <p className="text-xs text-zinc-400">
             Create your account to start private chatting & story sharing.
           </p>
         </div>
 
         {/* Register Card */}
-        <div className="glass-panel p-8 rounded-3xl border border-zinc-800 shadow-2xl space-y-6">
+        <div className="bg-[#12141A] p-8 rounded-2xl border border-white/[0.07] shadow-xl space-y-5">
           {errors.form && (
             <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium">
               {errors.form}

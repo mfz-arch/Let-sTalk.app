@@ -40,15 +40,15 @@ export default function MessagesPage() {
     <div className="h-[calc(100vh-65px)] md:h-screen flex overflow-hidden">
       {/* Conversation Sidebar List (Desktop always visible, Mobile hidden if active chat selected) */}
       <div
-        className={`w-full md:w-80 lg:w-96 flex flex-col glass-panel border-r border-zinc-800/80 flex-shrink-0 ${
+        className={`w-full md:w-80 lg:w-96 flex flex-col bg-[#12141A] border-r border-white/[0.07] flex-shrink-0 ${
           activeConversation ? 'hidden md:flex' : 'flex'
         }`}
       >
         {/* Messages Search Bar Header */}
-        <div className="p-4 border-b border-zinc-800/80 space-y-3">
+        <div className="p-4 border-b border-white/[0.06] space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-extrabold text-zinc-100 tracking-tight">Messages</h2>
-            <span className="text-xs text-indigo-400 font-semibold px-2 py-0.5 rounded-full bg-indigo-500/10">
+            <h2 className="text-lg font-bold text-zinc-100 tracking-tight">Messages</h2>
+            <span className="text-[11px] text-indigo-400 font-semibold px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
               {conversations.length} Active
             </span>
           </div>
@@ -60,7 +60,7 @@ export default function MessagesPage() {
               placeholder="Search conversations..."
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              className="w-full glass-input pl-10 pr-4 py-2 rounded-xl text-xs text-zinc-100 placeholder-zinc-500 outline-none border border-zinc-800 focus:border-indigo-500"
+              className="w-full bg-[#1A1D24] pl-10 pr-4 py-2 rounded-xl text-xs text-zinc-100 placeholder-zinc-500 outline-none border border-white/[0.07] focus:border-indigo-500/50 transition-colors"
             />
           </div>
         </div>

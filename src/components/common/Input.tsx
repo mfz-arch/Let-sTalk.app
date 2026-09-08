@@ -36,10 +36,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             type={actualType}
-            className={`w-full rounded-xl glass-input px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-all duration-200 ${
+            className={`w-full rounded-xl bg-[#1A1D24] px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-all duration-200 border border-white/[0.07] ${
               leftIcon ? 'pl-10' : ''
             } ${rightIcon || isPassword ? 'pr-10' : ''} ${
-              error ? 'border-rose-500/80 focus:ring-rose-500/50' : 'border-zinc-800 focus:ring-indigo-500/50'
+              error ? 'border-rose-500/80 focus:border-rose-500' : 'focus:border-indigo-500/50'
             } ${className}`}
             {...props}
           />

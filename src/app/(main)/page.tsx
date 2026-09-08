@@ -36,7 +36,7 @@ export default function HomePage() {
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
       {/* Welcome Banner */}
-      <div className="glass-panel p-6 rounded-3xl border border-zinc-800 relative overflow-hidden bg-gradient-to-r from-indigo-950/40 via-zinc-900 to-zinc-900 shadow-xl">
+      <div className="bg-[#12141A] p-6 rounded-2xl border border-white/[0.07] relative overflow-hidden shadow-sm">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-semibold border border-indigo-500/20 mb-1">
@@ -62,8 +62,8 @@ export default function HomePage() {
       {/* Stories Carousel */}
       <div className="space-y-2">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 flex items-center space-x-1.5">
-            <TrendingUp className="w-4 h-4 text-indigo-400" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center space-x-1.5">
+            <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
             <span>Stories</span>
           </h3>
           <span className="text-xs text-zinc-500 font-medium">Tap slide to view</span>
@@ -74,8 +74,8 @@ export default function HomePage() {
       {/* Grid: Active Conversations + Registered Contacts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Recent Conversations Card */}
-        <div className="glass-panel p-5 rounded-3xl border border-zinc-800 space-y-4">
-          <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+        <div className="bg-[#12141A] p-5 rounded-2xl border border-white/[0.07] space-y-4">
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
             <h3 className="text-sm font-bold text-zinc-100 flex items-center space-x-2">
               <MessageSquare className="w-4 h-4 text-indigo-400" />
               <span>Recent Conversations</span>
@@ -109,7 +109,7 @@ export default function HomePage() {
                       setActiveConversation(conv);
                       router.push('/messages');
                     }}
-                    className="flex items-center justify-between p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800/60 hover:bg-zinc-800/60 cursor-pointer transition-all"
+                    className="flex items-center justify-between p-3 rounded-xl bg-[#1A1D24] border border-white/[0.07] hover:bg-[#222630] cursor-pointer transition-all"
                   >
                     <div className="flex items-center space-x-3 min-w-0">
                       <Avatar src={other?.avatar || ''} alt={other?.name || 'User'} size="md" showStatus onlineStatus={other?.onlineStatus} />
@@ -131,8 +131,8 @@ export default function HomePage() {
         </div>
 
         {/* Registered Users on Let'sTalk */}
-        <div className="glass-panel p-5 rounded-3xl border border-zinc-800 space-y-4">
-          <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+        <div className="bg-[#12141A] p-5 rounded-2xl border border-white/[0.07] space-y-4">
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
             <h3 className="text-sm font-bold text-zinc-100 flex items-center space-x-2">
               <Users className="w-4 h-4 text-indigo-400" />
               <span>Registered People ({registeredUsers.length})</span>
@@ -155,7 +155,7 @@ export default function HomePage() {
               {registeredUsers.slice(0, 4).map((u) => (
                 <div
                   key={u.id}
-                  className="flex items-center justify-between p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800/60"
+                  className="flex items-center justify-between p-3 rounded-xl bg-[#1A1D24] border border-white/[0.07]"
                 >
                   <div className="flex items-center space-x-3 min-w-0">
                     <Avatar src={u.avatar} alt={u.name} size="md" showStatus onlineStatus={u.onlineStatus} />

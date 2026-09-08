@@ -78,7 +78,7 @@ export const CallOverlayModal: React.FC<CallOverlayModalProps> = ({
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="relative z-10 w-full max-w-sm h-[520px] glass-panel rounded-3xl overflow-hidden shadow-2xl border border-zinc-800 flex flex-col justify-between p-6 text-center"
+          className="relative z-10 w-full max-w-sm h-[520px] bg-[#12141A] rounded-2xl overflow-hidden shadow-2xl border border-white/[0.07] flex flex-col justify-between p-6 text-center"
         >
           {/* Call Header Status */}
           <div className="space-y-1">
