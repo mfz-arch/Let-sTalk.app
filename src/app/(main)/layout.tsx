@@ -11,7 +11,7 @@ import { StoryCreateModal } from '../../components/stories/StoryCreateModal';
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
-      <div className="flex min-h-screen bg-zinc-950 text-zinc-100">
+      <div className="flex min-h-screen bg-[#F8FAFC] text-slate-900">
         {/* Desktop Sidebar */}
         <Sidebar />
 

@@ -23,8 +23,8 @@ export default function DirectChatPage() {
 
   if (!activeConversation) {
     return (
-      <div className="h-screen bg-zinc-950 flex flex-col items-center justify-center space-y-3">
-        <p className="text-sm text-zinc-400">Loading conversation...</p>
+      <div className="h-screen bg-[#F8FAFC] flex flex-col items-center justify-center space-y-3">
+        <p className="text-sm text-slate-500">Loading conversation...</p>
       </div>
     );
   }
