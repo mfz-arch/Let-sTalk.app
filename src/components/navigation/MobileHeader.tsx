@@ -12,12 +12,12 @@ export const MobileHeader: React.FC = () => {
   const { openStoryCreator } = useStories();
 
   return (
-    <header className="md:hidden sticky top-0 z-30 bg-[#12141A] border-b border-white/[0.07] px-4 py-3 flex items-center justify-between">
+    <header className="md:hidden sticky top-0 z-30 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-xs">
       <Link href="/" className="flex items-center space-x-2.5">
-        <div className="w-8 h-8 rounded-lg bg-[#1A1D24] border border-white/[0.07] flex items-center justify-center shadow-sm">
-          <MessageCircle className="w-4 h-4 text-indigo-400" />
+        <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-xs">
+          <MessageCircle className="w-4 h-4 text-white" />
         </div>
-        <span className="font-extrabold text-base text-white tracking-tight">
+        <span className="font-extrabold text-base text-slate-900 tracking-tight">
           Let'sTalk
         </span>
       </Link>
@@ -25,7 +25,7 @@ export const MobileHeader: React.FC = () => {
       <div className="flex items-center space-x-3">
         <button
           onClick={openStoryCreator}
-          className="p-1.5 rounded-full bg-indigo-600/20 text-indigo-400 border border-indigo-500/30"
+          className="p-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200"
           title="Share Story"
         >
           <PlusCircle className="w-5 h-5" />

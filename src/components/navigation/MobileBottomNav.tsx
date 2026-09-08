@@ -16,7 +16,7 @@ export const MobileBottomNav: React.FC = () => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#12141A] border-t border-white/[0.07] px-6 py-2 flex items-center justify-around shadow-lg">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-200 px-6 py-2 flex items-center justify-around shadow-lg">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
@@ -26,7 +26,7 @@ export const MobileBottomNav: React.FC = () => {
             key={item.href}
             href={item.href}
             className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${
-              isActive ? 'text-indigo-400 font-semibold' : 'text-zinc-500 hover:text-zinc-300'
+              isActive ? 'text-emerald-600 font-bold' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             <Icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''} transition-transform`} />

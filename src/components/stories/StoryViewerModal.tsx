@@ -222,12 +222,12 @@ export const StoryViewerModal: React.FC = () => {
                     placeholder={`Reply to ${activeStoryGroup.user.name.split(' ')[0]}...`}
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
-                    className="flex-1 bg-black/60 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 text-xs text-white placeholder-white/60 outline-none focus:border-indigo-400"
+                    className="flex-1 bg-black/60 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 text-xs text-white placeholder-white/60 outline-none focus:border-emerald-400"
                   />
                   <button
                     type="submit"
                     disabled={!replyText.trim() || isSending}
-                    className="p-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl transition-colors shadow-lg"
+                    className="p-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-xl transition-colors shadow-lg"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -260,7 +260,7 @@ export const StoryViewerModal: React.FC = () => {
             >
               <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
                 <div className="flex items-center space-x-2">
-                  <Eye className="w-4 h-4 text-indigo-400" />
+                  <Eye className="w-4 h-4 text-emerald-400" />
                   <h3 className="text-xs font-bold text-white">Story Views & Likes</h3>
                 </div>
                 <button

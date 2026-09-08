@@ -168,18 +168,18 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   return (
-    <div className="relative p-3 bg-[#12141A] border-t border-white/[0.07]">
+    <div className="relative p-3 bg-white border-t border-slate-200">
       {/* WhatsApp Style Quoted Reply Preview Bar */}
       {replyingToMessage && !isRecording && (
-        <div className="mb-2.5 p-2.5 rounded-xl bg-[#1A1D24] border border-white/[0.07] flex items-center justify-between shadow-md">
+        <div className="mb-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between shadow-xs">
           <div className="flex items-center space-x-3 min-w-0 flex-1">
-            <div className="w-1.5 h-9 bg-gradient-to-b from-indigo-500 to-violet-500 rounded-full flex-shrink-0" />
+            <div className="w-1.5 h-9 bg-emerald-500 rounded-full flex-shrink-0" />
             <div className="min-w-0 flex-1">
-              <div className="flex items-center space-x-1 text-xs font-bold text-indigo-400">
+              <div className="flex items-center space-x-1 text-xs font-bold text-emerald-700">
                 <CornerUpLeft className="w-3.5 h-3.5" />
                 <span className="truncate">Replying to {replyingToMessage.replyTo?.senderName || otherParticipantName}</span>
               </div>
-              <p className="text-xs text-zinc-300 truncate">
+              <p className="text-xs text-slate-600 truncate">
                 {replyingToMessage.type === 'audio'
                   ? '🎙️ Voice message'
                   : replyingToMessage.type === 'image'
@@ -192,7 +192,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             <button
               type="button"
               onClick={onCancelReply}
-              className="p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition-colors ml-2"
+              className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors ml-2"
               title="Cancel Reply"
             >
               <X className="w-4 h-4" />
@@ -203,13 +203,13 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
       {/* Emoji Quick Picker Dropdown */}
       {showEmojiPicker && !isRecording && (
-        <div className="absolute bottom-full left-4 mb-2 p-2 bg-[#1A1D24] rounded-xl border border-white/[0.07] shadow-2xl flex items-center space-x-1.5 z-20">
+        <div className="absolute bottom-full left-4 mb-2 p-2 bg-white rounded-xl border border-slate-200 shadow-xl flex items-center space-x-1.5 z-20">
           {EMOJI_LIST.map((emoji) => (
             <button
               key={emoji}
               type="button"
               onClick={() => addEmoji(emoji)}
-              className="text-lg p-1.5 hover:bg-white/[0.06] rounded-lg transition-transform hover:scale-125"
+              className="text-lg p-1.5 hover:bg-slate-100 rounded-lg transition-transform hover:scale-125"
             >
               {emoji}
             </button>
@@ -220,7 +220,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       {/* Media Attachment Preview Box */}
       {mediaPreview && !isRecording && (
         <div className="mb-2 relative inline-block">
-          <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/10 relative">
+          <div className="w-20 h-20 rounded-xl overflow-hidden border border-slate-200 relative">
             <Image src={mediaPreview} alt="Preview" fill className="object-cover" unoptimized />
           </div>
           <button
@@ -235,13 +235,13 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
       {/* Live Recording Controls Bar */}
       {isRecording ? (
-        <div className="flex items-center justify-between bg-[#1A1D24] border border-rose-500/30 rounded-xl px-4 py-2.5 shadow-lg">
+        <div className="flex items-center justify-between bg-slate-50 border border-rose-200 rounded-xl px-4 py-2.5 shadow-xs">
           <div className="flex items-center space-x-3">
             <span className="relative flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
             </span>
-            <span className="text-xs font-semibold text-rose-400 uppercase tracking-wider">
+            <span className="text-xs font-semibold text-rose-600 uppercase tracking-wider">
               Recording {formatTimer(recordingSeconds)}
             </span>
           </div>
@@ -250,7 +250,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             <button
               type="button"
               onClick={stopAndCancelRecording}
-              className="p-2 text-zinc-400 hover:text-rose-400 hover:bg-white/[0.06] rounded-lg transition-colors"
+              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
               title="Cancel recording"
             >
               <Trash2 className="w-5 h-5" />
@@ -259,7 +259,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
               type="button"
               onClick={stopAndSendRecording}
               disabled={isSending}
-              className="p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-md transition-all flex items-center space-x-1"
+              className="p-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-md transition-all flex items-center space-x-1"
               title="Send voice message"
             >
               <Send className="w-4 h-4" />
@@ -272,7 +272,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-2.5 text-zinc-400 hover:text-indigo-400 hover:bg-white/[0.06] rounded-lg transition-colors"
+            className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-slate-100 rounded-lg transition-colors"
             title="Attach Photo"
           >
             <ImageIcon className="w-5 h-5" />
@@ -291,7 +291,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             className={`p-2.5 rounded-lg transition-colors ${
-              showEmojiPicker ? 'text-amber-400 bg-amber-400/10' : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06]'
+              showEmojiPicker ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
             }`}
             title="Emojis"
           >
@@ -302,7 +302,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           <button
             type="button"
             onClick={startRecording}
-            className="p-2.5 text-zinc-400 hover:text-rose-400 hover:bg-white/[0.06] rounded-lg transition-colors"
+            className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
             title="Record Voice Message"
           >
             <Mic className="w-5 h-5" />
@@ -315,14 +315,14 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={disabled}
-            className="flex-1 bg-[#1A1D24] px-4 py-2.5 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 outline-none border border-white/[0.07] focus:border-indigo-500/50 transition-colors"
+            className="flex-1 bg-slate-50 px-4 py-2.5 rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none border border-slate-200 focus:border-emerald-500 focus:bg-white transition-colors"
           />
 
           {/* Send Button */}
           <button
             type="submit"
             disabled={(!text.trim() && !mediaPreview) || isSending || disabled}
-            className="p-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl shadow-lg shadow-indigo-600/20 transition-all transform active:scale-95 flex-shrink-0"
+            className="p-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl shadow-md shadow-emerald-500/20 transition-all transform active:scale-95 flex-shrink-0"
           >
             <Send className="w-4 h-4" />
           </button>

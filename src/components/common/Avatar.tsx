@@ -46,8 +46,8 @@ export const Avatar: React.FC<AvatarProps> = ({
 }) => {
   const storyRingClass = hasStoryRing
     ? hasUnseenStory
-      ? 'p-[2.5px] rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 shadow-md shadow-purple-500/20'
-      : 'p-[2px] rounded-full border-2 border-zinc-700/60 opacity-60'
+      ? 'p-[2.5px] rounded-full bg-gradient-to-tr from-emerald-500 via-teal-500 to-emerald-600 shadow-xs'
+      : 'p-[2px] rounded-full border-2 border-slate-300 opacity-60'
     : '';
 
   return (
@@ -55,7 +55,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       onClick={onClick}
       className={`relative inline-block flex-shrink-0 cursor-pointer ${storyRingClass} ${className}`}
     >
-      <div className={`relative overflow-hidden rounded-full bg-zinc-800 border border-zinc-700/50 ${sizeClasses[size]}`}>
+      <div className={`relative overflow-hidden rounded-full bg-slate-100 border border-slate-200 ${sizeClasses[size]}`}>
         {src ? (
           <Image
             src={src}
@@ -66,7 +66,7 @@ export const Avatar: React.FC<AvatarProps> = ({
             unoptimized
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center font-bold text-zinc-300 uppercase">
+          <div className="w-full h-full flex items-center justify-center font-bold text-slate-600 uppercase">
             {alt ? alt.substring(0, 2) : 'U'}
           </div>
         )}
@@ -74,12 +74,12 @@ export const Avatar: React.FC<AvatarProps> = ({
 
       {showStatus && onlineStatus && (
         <span
-          className={`absolute bottom-0 right-0 rounded-full ring-zinc-950 ${statusSizeClasses[size]} ${
+          className={`absolute bottom-0 right-0 rounded-full ring-white ${statusSizeClasses[size]} ${
             onlineStatus === 'online'
               ? 'bg-emerald-500'
               : onlineStatus === 'away'
               ? 'bg-amber-500'
-              : 'bg-zinc-500'
+              : 'bg-slate-400'
           }`}
         />
       )}

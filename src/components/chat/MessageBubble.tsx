@@ -79,24 +79,24 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
         {/* CALL LOG BUBBLE */}
         {isCallLog ? (
           <div className="flex justify-center my-1">
-            <div className="bg-[#16181F] border border-white/[0.07] text-zinc-300 text-xs px-4 py-2 rounded-xl flex items-center space-x-2 shadow-sm">
+            <div className="bg-slate-100 border border-slate-200 text-slate-700 text-xs px-4 py-2 rounded-xl flex items-center space-x-2 shadow-xs">
               {message.content.includes('Missed') ? (
-                <PhoneMissed className="w-4 h-4 text-rose-400" />
+                <PhoneMissed className="w-4 h-4 text-rose-500" />
               ) : (
-                <PhoneCall className="w-4 h-4 text-emerald-400" />
+                <PhoneCall className="w-4 h-4 text-emerald-600" />
               )}
               <span className="font-medium">{message.content}</span>
-              <span className="text-[10px] text-zinc-500 ml-2">{timeFormatted}</span>
+              <span className="text-[10px] text-slate-400 ml-2">{timeFormatted}</span>
             </div>
           </div>
         ) : (
           <div className="flex items-center space-x-2 max-w-[85%] md:max-w-[70%]">
-            {/* Quick Reply Button on Hover (WhatsApp style) */}
+            {/* Quick Reply Button on Hover */}
             {onReply && isMe && (
               <button
                 type="button"
                 onClick={() => onReply(message)}
-                className="opacity-0 group-hover/msg:opacity-100 p-1.5 text-zinc-400 hover:text-white bg-[#1A1D24] border border-white/[0.07] rounded-full transition-opacity shadow-sm"
+                className="opacity-0 group-hover/msg:opacity-100 p-1.5 text-slate-400 hover:text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-full transition-opacity shadow-xs"
                 title="Reply"
               >
                 <CornerUpLeft className="w-3.5 h-3.5" />
@@ -104,21 +104,35 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
             )}
 
             <div
-              className={`rounded-2xl p-3.5 shadow-md relative transition-all w-full ${
+              className={`rounded-2xl p-3.5 shadow-xs relative transition-all w-full ${
                 isMe
-                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-br-xs shadow-indigo-600/15'
-                  : 'bg-[#1A1D24] text-zinc-100 border border-white/[0.07] rounded-bl-xs'
+                  ? 'bg-emerald-500 text-white rounded-br-xs shadow-emerald-500/10'
+                  : 'bg-white text-slate-900 border border-slate-200/80 rounded-bl-xs'
               }`}
             >
               {/* WhatsApp Style Quoted Reply Card inside Message Bubble */}
               {message.replyTo && (
-                <div className="mb-2.5 p-2.5 rounded-xl bg-black/30 border border-white/10 flex items-center space-x-2.5 overflow-hidden">
-                  <div className="w-1 h-9 bg-emerald-400 rounded-full flex-shrink-0" />
+                <div
+                  className={`mb-2.5 p-2.5 rounded-xl border flex items-center space-x-2.5 overflow-hidden ${
+                    isMe
+                      ? 'bg-emerald-600/30 border-emerald-400/30 text-white'
+                      : 'bg-slate-100 border-slate-200 text-slate-800'
+                  }`}
+                >
+                  <div
+                    className={`w-1 h-9 rounded-full flex-shrink-0 ${
+                      isMe ? 'bg-white' : 'bg-emerald-500'
+                    }`}
+                  />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-emerald-400 truncate">
+                    <p
+                      className={`text-xs font-bold truncate ${
+                        isMe ? 'text-white' : 'text-emerald-700'
+                      }`}
+                    >
                       {message.replyTo.senderName}
                     </p>
-                    <p className="text-xs text-zinc-200 truncate">
+                    <p className={`text-xs truncate ${isMe ? 'text-emerald-100' : 'text-slate-600'}`}>
                       {message.replyTo.type === 'audio'
                         ? '🎙️ Voice message'
                         : message.replyTo.type === 'image'
@@ -131,7 +145,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
 
               {/* Story Reply Context Header */}
               {message.type === 'story_reply' && message.storyContext && (
-                <div className="mb-2.5 p-2 rounded-xl bg-black/30 border border-white/10 flex items-center space-x-2.5">
+                <div
+                  className={`mb-2.5 p-2 rounded-xl border flex items-center space-x-2.5 ${
+                    isMe
+                      ? 'bg-emerald-600/30 border-emerald-400/30 text-white'
+                      : 'bg-slate-100 border-slate-200 text-slate-800'
+                  }`}
+                >
                   <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
                     <Image
                       src={message.storyContext.storyMediaUrl}
@@ -141,20 +161,20 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
                       unoptimized
                     />
                   </div>
-                  <span className="text-xs text-zinc-300 font-medium italic truncate">
+                  <span className={`text-xs font-medium italic truncate ${isMe ? 'text-emerald-100' : 'text-slate-600'}`}>
                     Replied to story
                   </span>
                 </div>
               )}
 
-              {/* Image Attachment (WhatsApp Style Proportional Display + Click to Lightbox) */}
+              {/* Image Attachment */}
               {isImage && message.mediaUrl && (
-                <div className="mb-2 overflow-hidden rounded-xl bg-black/20">
+                <div className="mb-2 overflow-hidden rounded-xl bg-slate-900/10">
                   <img
                     src={message.mediaUrl}
                     alt="Shared photo"
                     onClick={() => setShowImageLightbox(true)}
-                    className="max-h-80 w-auto max-w-full object-contain rounded-xl cursor-pointer hover:brightness-105 active:scale-[0.99] transition-all shadow-md"
+                    className="max-h-80 w-auto max-w-full object-contain rounded-xl cursor-pointer hover:brightness-105 active:scale-[0.99] transition-all shadow-xs"
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
@@ -162,21 +182,33 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
                 </div>
               )}
 
-              {/* WhatsApp Style Audio Voice Note Player */}
+              {/* Audio Voice Note Player */}
               {isAudio && message.mediaUrl && (
-                <div className="flex items-center space-x-3 py-1.5 px-2.5 min-w-[240px] max-w-[300px] bg-black/25 rounded-xl border border-white/10">
+                <div
+                  className={`flex items-center space-x-3 py-1.5 px-2.5 min-w-[240px] max-w-[300px] rounded-xl border ${
+                    isMe
+                      ? 'bg-emerald-600/30 border-white/20 text-white'
+                      : 'bg-slate-100 border-slate-200 text-slate-800'
+                  }`}
+                >
                   <button
                     type="button"
                     onClick={toggleAudio}
-                    className={`p-3 rounded-full text-white transition-transform active:scale-95 flex-shrink-0 shadow-md ${
-                      isMe ? 'bg-white/20 hover:bg-white/30' : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30'
+                    className={`p-3 rounded-full transition-transform active:scale-95 flex-shrink-0 shadow-xs ${
+                      isMe
+                        ? 'bg-white/20 hover:bg-white/30 text-white'
+                        : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'
                     }`}
                   >
                     {isPlayingAudio ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 ml-0.5 fill-current" />}
                   </button>
 
                   <div className="flex-1 flex flex-col justify-center space-y-1">
-                    <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-200">
+                    <div
+                      className={`flex items-center justify-between text-[11px] font-semibold ${
+                        isMe ? 'text-white' : 'text-slate-700'
+                      }`}
+                    >
                       <span className="flex items-center space-x-1">
                         <Volume2 className="w-3.5 h-3.5 opacity-80" />
                         <span>Voice Note</span>
@@ -190,7 +222,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
                       max={audioDuration || 100}
                       value={audioCurrentTime}
                       onChange={handleAudioSeek}
-                      className="w-full h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-indigo-400"
+                      className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer ${
+                        isMe ? 'bg-white/30 accent-white' : 'bg-slate-200 accent-emerald-500'
+                      }`}
                     />
                   </div>
 
@@ -218,30 +252,30 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
               {/* Message Timestamp & Delivery Status */}
               <div
                 className={`flex items-center justify-end space-x-1.5 mt-1.5 text-[10px] ${
-                  isMe ? 'text-indigo-200' : 'text-zinc-400'
+                  isMe ? 'text-emerald-100' : 'text-slate-400'
                 }`}
               >
                 <span>{timeFormatted}</span>
                 {isMe && (
                   <span>
                     {message.status === 'read' ? (
-                      <CheckCheck className="w-3.5 h-3.5 text-sky-400 font-extrabold drop-shadow-sm inline" />
+                      <CheckCheck className="w-3.5 h-3.5 text-sky-300 font-extrabold drop-shadow-xs inline" />
                     ) : message.status === 'delivered' ? (
-                      <CheckCheck className="w-3.5 h-3.5 text-indigo-200/80 inline" />
+                      <CheckCheck className="w-3.5 h-3.5 text-emerald-100/90 inline" />
                     ) : (
-                      <Check className="w-3.5 h-3.5 text-indigo-200/80 inline" />
+                      <Check className="w-3.5 h-3.5 text-emerald-100/90 inline" />
                     )}
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Quick Reply Button on Hover (WhatsApp style for other person's messages) */}
+            {/* Quick Reply Button on Hover (for other person's messages) */}
             {onReply && !isMe && (
               <button
                 type="button"
                 onClick={() => onReply(message)}
-                className="opacity-0 group-hover/msg:opacity-100 p-1.5 text-zinc-400 hover:text-white bg-[#1A1D24] border border-white/[0.07] rounded-full transition-opacity shadow-sm"
+                className="opacity-0 group-hover/msg:opacity-100 p-1.5 text-slate-400 hover:text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-full transition-opacity shadow-xs"
                 title="Reply"
               >
                 <CornerUpLeft className="w-3.5 h-3.5" />

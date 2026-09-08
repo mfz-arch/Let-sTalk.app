@@ -38,18 +38,18 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   if (conversations.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center space-y-3 my-auto">
-        <div className="w-14 h-14 rounded-2xl bg-zinc-900 flex items-center justify-center text-zinc-500 border border-zinc-800">
-          <MessageSquarePlus className="w-6 h-6" />
+        <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200">
+          <MessageSquarePlus className="w-6 h-6 text-emerald-600" />
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-zinc-200">No conversations yet</h4>
-          <p className="text-xs text-zinc-500 mt-1 max-w-[200px]">
+          <h4 className="text-sm font-bold text-slate-800">No conversations yet</h4>
+          <p className="text-xs text-slate-500 mt-1 max-w-[200px]">
             Find someone on Let'sTalk and start your first private conversation.
           </p>
         </div>
         <Link
           href="/search"
-          className="px-4 py-2 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 text-xs font-semibold hover:bg-indigo-600/30 transition-colors"
+          className="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold hover:bg-emerald-100 transition-colors"
         >
           Discover People
         </Link>
@@ -73,8 +73,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             onClick={() => onSelect(conv)}
             className={`flex items-center space-x-3 p-2.5 rounded-xl cursor-pointer transition-all ${
               isActive
-                ? 'bg-indigo-500/12 border border-indigo-500/25 shadow-sm'
-                : 'hover:bg-white/[0.04] border border-transparent'
+                ? 'bg-emerald-50/80 border-l-4 border-emerald-500 shadow-xs'
+                : 'hover:bg-slate-50 border border-transparent'
             }`}
           >
             <Avatar
@@ -87,29 +87,29 @@ export const ConversationList: React.FC<ConversationListProps> = ({
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-semibold text-zinc-100 truncate">
+                <h4 className="text-xs font-bold text-slate-900 truncate">
                   {otherParticipant?.name}
                 </h4>
                 {lastMsg && (
-                  <span className="text-[10px] text-zinc-500 font-medium ml-2 flex-shrink-0">
+                  <span className="text-[10px] text-slate-400 font-medium ml-2 flex-shrink-0">
                     {new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 )}
               </div>
 
               <div className="flex items-center justify-between mt-0.5">
-                <p className="text-xs text-zinc-400 truncate pr-2 font-normal">
+                <p className="text-xs text-slate-500 truncate pr-2 font-normal">
                   {lastMsg?.type === 'story_reply' ? (
-                    <span className="italic text-indigo-400 font-medium">Replied to story...</span>
+                    <span className="italic text-emerald-600 font-medium">Replied to story...</span>
                   ) : lastMsg?.type === 'image' ? (
-                    <span className="italic text-zinc-300">📷 Photo</span>
+                    <span className="italic text-slate-600">📷 Photo</span>
                   ) : (
                     lastMsg?.content || 'No messages yet'
                   )}
                 </p>
 
                 {conv.unreadCount > 0 && (
-                  <span className="min-w-[18px] h-[18px] rounded-full bg-indigo-500 text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-sm flex-shrink-0">
+                  <span className="min-w-[18px] h-[18px] rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-xs flex-shrink-0">
                     {conv.unreadCount}
                   </span>
                 )}

@@ -13,7 +13,7 @@ interface UserSearchCardProps {
 
 export const UserSearchCard: React.FC<UserSearchCardProps> = ({ user, onMessageClick }) => {
   return (
-    <div className="bg-[#1A1D24] rounded-xl p-4 border border-white/[0.07] flex items-center justify-between transition-all hover:border-white/15 shadow-sm">
+    <div className="bg-white rounded-xl p-4 border border-slate-200 flex items-center justify-between transition-all hover:border-slate-300 shadow-xs">
       <div className="flex items-center space-x-3.5 min-w-0">
         <Avatar
           src={user.avatar}
@@ -23,10 +23,10 @@ export const UserSearchCard: React.FC<UserSearchCardProps> = ({ user, onMessageC
           onlineStatus={user.onlineStatus}
         />
         <div className="min-w-0">
-          <h4 className="text-sm font-bold text-zinc-100 truncate">{user.name}</h4>
-          <p className="text-xs text-indigo-400 font-medium">@{user.username}</p>
+          <h4 className="text-sm font-bold text-slate-900 truncate">{user.name}</h4>
+          <p className="text-xs text-emerald-700 font-medium">@{user.username}</p>
           {user.bio && (
-            <p className="text-xs text-zinc-400 truncate mt-1 max-w-[240px]">
+            <p className="text-xs text-slate-500 truncate mt-1 max-w-[240px]">
               {user.bio}
             </p>
           )}

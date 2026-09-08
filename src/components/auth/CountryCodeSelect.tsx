@@ -37,23 +37,23 @@ export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({ selected, 
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-1.5 px-3 py-2.5 rounded-xl bg-[#1A1D24] border border-white/[0.07] text-sm text-zinc-200 hover:border-white/20 transition-all cursor-pointer"
+        className="flex items-center space-x-1.5 px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 hover:border-slate-300 transition-all cursor-pointer"
       >
         <span className="text-lg leading-none">{selected.flag}</span>
-        <span className="font-semibold text-zinc-100">{selected.dialCode}</span>
-        <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <span className="font-semibold text-slate-900">{selected.dialCode}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-2 z-50 w-64 bg-[#12141A] rounded-xl p-2 border border-white/[0.07] shadow-2xl space-y-2 max-h-60 overflow-y-auto">
+        <div className="absolute left-0 top-full mt-2 z-50 w-64 bg-white rounded-xl p-2 border border-slate-200 shadow-xl space-y-2 max-h-60 overflow-y-auto">
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-zinc-500" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
             <input
               type="text"
               placeholder="Search country..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-[#1A1D24] border border-white/[0.07] rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 outline-none focus:border-indigo-500/50"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-emerald-500"
             />
           </div>
 
@@ -68,15 +68,15 @@ export const CountryCodeSelect: React.FC<CountryCodeSelectProps> = ({ selected, 
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
                   selected.code === country.code
-                    ? 'bg-indigo-600/20 text-indigo-400 font-semibold'
-                    : 'hover:bg-zinc-800/60 text-zinc-300'
+                    ? 'bg-emerald-50 text-emerald-700 font-semibold'
+                    : 'hover:bg-slate-100 text-slate-700'
                 }`}
               >
                 <div className="flex items-center space-x-2 truncate">
                   <span>{country.flag}</span>
                   <span className="truncate">{country.name}</span>
                 </div>
-                <span className="font-mono text-zinc-400 font-medium ml-2">{country.dialCode}</span>
+                <span className="font-mono text-slate-400 font-medium ml-2">{country.dialCode}</span>
               </button>
             ))}
           </div>

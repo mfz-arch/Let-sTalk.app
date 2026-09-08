@@ -26,7 +26,7 @@ export const StoryBar: React.FC = () => {
   const otherStories = stories.filter((s) => user && s.userId !== user.id);
 
   return (
-    <div className="w-full bg-[#12141a] rounded-2xl p-3.5 border border-white/[0.07] shadow-sm">
+    <div className="w-full bg-white rounded-2xl p-3.5 border border-slate-200 shadow-sm">
       <div className="flex items-center space-x-4 overflow-x-auto pb-0.5 pt-0.5 no-scrollbar">
         {/* Your Story item */}
         <div className="flex flex-col items-center space-y-1.5 flex-shrink-0 cursor-pointer group">
@@ -51,13 +51,13 @@ export const StoryBar: React.FC = () => {
 
             <button
               onClick={openStoryCreator}
-              className="absolute -bottom-0.5 -right-0.5 p-1 bg-indigo-600 rounded-full text-white ring-2 ring-[#12141a] hover:bg-indigo-500 transition-colors shadow-md active:scale-95"
+              className="absolute -bottom-0.5 -right-0.5 p-1 bg-emerald-500 rounded-full text-white ring-2 ring-white hover:bg-emerald-600 transition-colors shadow-md active:scale-95"
               title="Add Story"
             >
               <Plus className="w-3 h-3 stroke-[2.5]" />
             </button>
           </div>
-          <span className="text-[11px] font-medium text-zinc-400 group-hover:text-zinc-200 transition-colors">
+          <span className="text-[11px] font-semibold text-slate-600 group-hover:text-slate-900 transition-colors">
             Your Story
           </span>
         </div>
@@ -76,7 +76,7 @@ export const StoryBar: React.FC = () => {
               hasStoryRing
               hasUnseenStory={storyGroup.hasUnseen}
             />
-            <span className="text-[11px] font-medium text-zinc-400 group-hover:text-zinc-200 transition-colors max-w-[68px] truncate text-center">
+            <span className="text-[11px] font-semibold text-slate-600 group-hover:text-slate-900 transition-colors max-w-[68px] truncate text-center">
               {storyGroup.user.name.split(' ')[0]}
             </span>
           </div>

@@ -23,19 +23,19 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseClasses =
-    'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]';
+    'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]';
 
   const variantClasses = {
     primary:
-      'bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-sm focus:ring-2 focus:ring-indigo-500/50',
+      'bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-sm focus:ring-2 focus:ring-emerald-500/40',
     secondary:
-      'bg-[#1A1D24] hover:bg-[#222630] text-zinc-100 border border-white/[0.07] font-semibold focus:ring-2 focus:ring-white/10',
+      'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 font-semibold focus:ring-2 focus:ring-slate-300',
     outline:
-      'bg-transparent hover:bg-white/[0.04] text-zinc-200 border border-white/[0.07] font-semibold focus:ring-2 focus:ring-white/10',
+      'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-semibold focus:ring-2 focus:ring-emerald-500/30',
     ghost:
-      'bg-transparent hover:bg-white/[0.04] text-zinc-300 hover:text-white font-medium focus:ring-2 focus:ring-white/10',
+      'bg-transparent hover:bg-slate-100 text-slate-600 hover:text-slate-900 font-medium focus:ring-2 focus:ring-slate-200',
     danger:
-      'bg-rose-600 hover:bg-rose-500 text-white font-semibold shadow-sm focus:ring-2 focus:ring-rose-500/50',
+      'bg-rose-600 hover:bg-rose-500 text-white font-semibold shadow-sm focus:ring-2 focus:ring-rose-500/40',
   };
 
   const sizeClasses = {

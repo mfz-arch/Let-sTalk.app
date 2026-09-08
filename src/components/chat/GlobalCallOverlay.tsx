@@ -105,10 +105,10 @@ export const GlobalCallOverlay: React.FC = () => {
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative z-10 w-full max-w-sm h-[480px] bg-[#12141A] rounded-2xl overflow-hidden shadow-2xl border border-indigo-500/40 flex flex-col justify-between p-6 text-center"
+            className="relative z-10 w-full max-w-sm h-[480px] bg-[#12141A] rounded-2xl overflow-hidden shadow-2xl border border-emerald-500/40 flex flex-col justify-between p-6 text-center"
           >
             <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-400">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400">
                 Incoming {isVideo ? 'Video' : 'Audio'} Call
               </span>
               <p className="text-xs text-zinc-300 font-semibold animate-pulse">
@@ -120,7 +120,7 @@ export const GlobalCallOverlay: React.FC = () => {
             <div className="flex flex-col items-center justify-center space-y-4 my-auto">
               <div className="relative flex items-center justify-center">
                 <div className="absolute w-36 h-36 rounded-full bg-emerald-500/20 animate-ping" />
-                <div className="absolute w-28 h-28 rounded-full bg-indigo-500/30 animate-pulse" />
+                <div className="absolute w-28 h-28 rounded-full bg-emerald-500/30 animate-pulse" />
                 <Avatar
                   src={activeCall.callerAvatar || ''}
                   alt={activeCall.callerName}
@@ -198,7 +198,7 @@ export const GlobalCallOverlay: React.FC = () => {
 
             {/* Header Call Status */}
             <div className="relative z-20 space-y-1">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-400">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400">
                 Let'sTalk {isVideo ? 'Video' : 'Audio'} Call
               </span>
               <p className="text-xs text-zinc-300 font-medium">
@@ -214,15 +214,15 @@ export const GlobalCallOverlay: React.FC = () => {
                 <div className="relative flex items-center justify-center">
                   {activeCall.status === 'ringing' && (
                     <>
-                      <div className="absolute w-36 h-36 rounded-full bg-indigo-600/20 animate-ping" />
-                      <div className="absolute w-28 h-28 rounded-full bg-violet-600/30 animate-pulse" />
+                      <div className="absolute w-36 h-36 rounded-full bg-emerald-600/20 animate-ping" />
+                      <div className="absolute w-28 h-28 rounded-full bg-teal-600/30 animate-pulse" />
                     </>
                   )}
                   <Avatar
                     src={activeCall.callerAvatar || ''}
                     alt={activeCall.callerName}
                     size="2xl"
-                    className="ring-4 ring-indigo-500/50 shadow-2xl relative z-10"
+                    className="ring-4 ring-emerald-500/50 shadow-2xl relative z-10"
                   />
                 </div>
 

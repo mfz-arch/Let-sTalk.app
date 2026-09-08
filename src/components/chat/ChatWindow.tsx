@@ -43,14 +43,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   }, [messages]);
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#0b0c10] overflow-hidden relative">
+    <div className="flex-1 flex flex-col h-full bg-[#F8FAFC] overflow-hidden relative">
       {/* Active Chat Header */}
-      <div className="bg-[#12141a] px-4 py-3 border-b border-white/[0.07] flex items-center justify-between z-10">
+      <div className="bg-white px-4 py-3 border-b border-slate-200 flex items-center justify-between z-10 shadow-xs">
         <div className="flex items-center space-x-3 min-w-0">
           {onBackMobile && (
             <button
               onClick={onBackMobile}
-              className="md:hidden p-1.5 text-zinc-400 hover:text-zinc-200 rounded-lg hover:bg-white/[0.05]"
+              className="md:hidden p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -66,12 +66,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             />
 
             <div className="truncate min-w-0">
-              <h3 className="text-xs font-bold text-zinc-100 group-hover:text-indigo-400 transition-colors truncate">
+              <h3 className="text-xs font-bold text-slate-900 group-hover:text-emerald-600 transition-colors truncate">
                 {otherParticipant?.name}
               </h3>
-              <p className="text-[10px] text-zinc-400 truncate">
+              <p className="text-[10px] text-slate-400 truncate">
                 {isOnline ? (
-                  <span className="text-emerald-400 font-semibold">Online</span>
+                  <span className="text-emerald-600 font-bold">Online</span>
                 ) : (
                   <span>Last seen {otherParticipant?.lastSeen || 'recently'}</span>
                 )}
@@ -81,22 +81,22 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
 
         {/* Call Action Icons */}
-        <div className="flex items-center space-x-1 text-zinc-400">
+        <div className="flex items-center space-x-1 text-slate-500">
           <button
             onClick={() => otherParticipant && initiateCall(otherParticipant, 'audio')}
-            className="p-2 hover:text-indigo-400 hover:bg-white/[0.05] rounded-lg transition-colors"
+            className="p-2 hover:text-emerald-600 hover:bg-slate-100 rounded-lg transition-colors"
             title="Audio Call"
           >
             <Phone className="w-4 h-4" />
           </button>
           <button
             onClick={() => otherParticipant && initiateCall(otherParticipant, 'video')}
-            className="p-2 hover:text-indigo-400 hover:bg-white/[0.05] rounded-lg transition-colors"
+            className="p-2 hover:text-emerald-600 hover:bg-slate-100 rounded-lg transition-colors"
             title="Video Call"
           >
             <Video className="w-4 h-4" />
           </button>
-          <button className="p-2 hover:text-indigo-400 hover:bg-white/[0.05] rounded-lg transition-colors">
+          <button className="p-2 hover:text-emerald-600 hover:bg-slate-100 rounded-lg transition-colors">
             <Info className="w-4 h-4" />
           </button>
         </div>
@@ -106,7 +106,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       <div className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar">
         {/* Security privacy notice */}
         <div className="flex justify-center my-3">
-          <div className="bg-[#161820] border border-white/[0.06] text-zinc-400 text-[11px] font-medium px-3 py-1 rounded-full shadow-sm">
+          <div className="bg-white border border-slate-200 text-slate-500 text-[11px] font-medium px-3 py-1 rounded-full shadow-xs">
             🔒 Private conversation between {user?.name.split(' ')[0]} and {otherParticipant?.name.split(' ')[0]}
           </div>
         </div>

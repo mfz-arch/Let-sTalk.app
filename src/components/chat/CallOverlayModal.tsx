@@ -82,7 +82,7 @@ export const CallOverlayModal: React.FC<CallOverlayModalProps> = ({
         >
           {/* Call Header Status */}
           <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-400">
+            <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400">
               Let'sTalk {callType === 'video' ? 'Video' : 'Audio'} Call
             </span>
             <p className="text-xs text-zinc-400 font-medium">
@@ -99,15 +99,15 @@ export const CallOverlayModal: React.FC<CallOverlayModalProps> = ({
             <div className="relative flex items-center justify-center">
               {callState === 'ringing' && (
                 <>
-                  <div className="absolute w-36 h-36 rounded-full bg-indigo-600/20 animate-ping" />
-                  <div className="absolute w-28 h-28 rounded-full bg-violet-600/30 animate-pulse" />
+                  <div className="absolute w-36 h-36 rounded-full bg-emerald-600/20 animate-ping" />
+                  <div className="absolute w-28 h-28 rounded-full bg-teal-600/30 animate-pulse" />
                 </>
               )}
               <Avatar
                 src={targetUser.avatar}
                 alt={targetUser.name}
                 size="2xl"
-                className="ring-4 ring-indigo-500/50 shadow-2xl relative z-10"
+                className="ring-4 ring-emerald-500/50 shadow-2xl relative z-10"
               />
             </div>
 

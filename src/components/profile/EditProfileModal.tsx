@@ -57,7 +57,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
         <div className="flex flex-col items-center justify-center space-y-3">
           <div className="relative group">
             <Avatar src={avatar} alt={name} size="2xl" />
-            <label className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer border border-white/20">
+            <label className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer border border-white/20">
               <Camera className="w-6 h-6 text-white" />
               <input
                 type="file"
@@ -67,7 +67,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
               />
             </label>
           </div>
-          <span className="text-xs text-zinc-400">Click avatar to upload photo</span>
+          <span className="text-xs text-slate-400">Click avatar to upload photo</span>
         </div>
 
         <Input
@@ -78,7 +78,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
         />
 
         <div className="space-y-1.5">
-          <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
             Bio / Status
           </label>
           <textarea
@@ -86,7 +86,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onCl
             onChange={(e) => setBio(e.target.value)}
             rows={3}
             placeholder="Tell friends about yourself..."
-            className="w-full rounded-xl glass-input px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none border border-zinc-800 focus:border-indigo-500 resize-none"
+            className="w-full rounded-xl bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none border border-slate-200 focus:border-emerald-500 focus:bg-white transition-colors resize-none"
           />
         </div>
 

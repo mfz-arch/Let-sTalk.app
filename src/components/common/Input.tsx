@@ -21,14 +21,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full space-y-1.5">
         {label && (
-          <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
             {label}
           </label>
         )}
 
         <div className="relative flex items-center">
           {leftIcon && (
-            <div className="absolute left-3.5 text-zinc-400 pointer-events-none">
+            <div className="absolute left-3.5 text-slate-400 pointer-events-none">
               {leftIcon}
             </div>
           )}
@@ -36,10 +36,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             type={actualType}
-            className={`w-full rounded-xl bg-[#1A1D24] px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition-all duration-200 border border-white/[0.07] ${
+            className={`w-full rounded-xl bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all duration-200 border border-slate-200 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 ${
               leftIcon ? 'pl-10' : ''
             } ${rightIcon || isPassword ? 'pr-10' : ''} ${
-              error ? 'border-rose-500/80 focus:border-rose-500' : 'focus:border-indigo-500/50'
+              error ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : ''
             } ${className}`}
             {...props}
           />
@@ -48,10 +48,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 text-zinc-400 hover:text-zinc-200 transition-colors focus:outline-none"
+              className="absolute right-3.5 text-slate-400 hover:text-slate-700 transition-colors focus:outline-none"
               title={showPassword ? 'Hide password' : 'Show password'}
             >
-              {showPassword ? <EyeOff className="w-4 h-4 text-indigo-400" /> : <Eye className="w-4 h-4 text-zinc-400" />}
+              {showPassword ? <EyeOff className="w-4 h-4 text-emerald-600" /> : <Eye className="w-4 h-4 text-slate-400" />}
             </button>
           ) : (
             rightIcon && (
