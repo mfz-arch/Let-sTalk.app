@@ -36,6 +36,11 @@ export const setupChatSocket = (io: SocketIOServer): void => {
       socket.to(data.conversationId).emit('user_typing', data);
     });
 
+    // Handle real-time instant read receipts broadcast
+    socket.on('mark_read', (data: { conversationId: string; userId: string }) => {
+      io.to(data.conversationId).emit('messages_read', data);
+    });
+
     // Disconnect event
     socket.on('disconnect', () => {
       let disconnectedUserId: string | null = null;

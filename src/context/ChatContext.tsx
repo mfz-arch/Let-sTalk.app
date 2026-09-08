@@ -112,7 +112,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [activeConversation, user]);
 
-  // Listen for real-time incoming messages
+  // Listen for real-time incoming messages & read receipts
   useEffect(() => {
     if (!socket) return;
 
@@ -124,6 +124,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (prev.find((m) => m.id === message.id)) return prev;
           return [...prev, message];
         });
+
+        // Automatically mark as read if user is looking at this active conversation
+        if (user && message.receiverId === user.id) {
+          markAsRead(activeConversation.id);
+        }
       }
 
       // Always update the conversation list to show the latest message and unread badge
@@ -151,10 +156,33 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     };
 
+    // Instant WebSocket Read Receipt Event Handler
+    const handleMessagesRead = (data: { conversationId: string; userId: string }) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.conversationId === data.conversationId ? { ...m, status: 'read' } : m
+        )
+      );
+
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id === data.conversationId && c.lastMessage) {
+            return {
+              ...c,
+              lastMessage: { ...c.lastMessage, status: 'read' },
+            };
+          }
+          return c;
+        })
+      );
+    };
+
     socket.on('receive_message', handleReceiveMessage);
+    socket.on('messages_read', handleMessagesRead);
 
     return () => {
       socket.off('receive_message', handleReceiveMessage);
+      socket.off('messages_read', handleMessagesRead);
     };
   }, [socket, activeConversation, user?.id, fetchConversations]);
 
@@ -183,6 +211,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setMessages((prev) => [...prev, newMsg]);
 
+    // Emit send_message over socket for real-time delivery
+    if (socket) {
+      socket.emit('send_message', { conversationId: activeConversation.id, message: newMsg });
+    }
+
     // Update conversation list
     setConversations((prev) =>
       prev.map((c) =>
@@ -204,6 +237,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const markAsRead = async (conversationId: string) => {
     if (!user) return;
     await chatService.markAsRead(conversationId, user.id);
+
+    // Emit real-time mark_read over socket so sender sees blue ticks INSTANTLY (0 ms latency)
+    if (socket) {
+      socket.emit('mark_read', { conversationId, userId: user.id });
+    }
+
     setConversations((prev) =>
       prev.map((c) => (c.id === conversationId ? { ...c, unreadCount: 0 } : c))
     );
