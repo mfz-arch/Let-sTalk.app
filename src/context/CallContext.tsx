@@ -35,13 +35,18 @@ interface CallContextType {
 
 const CallContext = createContext<CallContextType | undefined>(undefined);
 
-// Robust STUN + Free Metered TURN servers for WebRTC NAT traversal across all mobile/Wi-Fi networks
-const ICE_SERVERS = {
+// Robust STUN + Metered TURNS servers with max-bundle policy for distant cellular & CGNAT networks
+const ICE_SERVERS: RTCConfiguration = {
   iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' },
-    { urls: 'stun:stun.services.mozilla.com' },
+    {
+      urls: [
+        'stun:stun.l.google.com:19302',
+        'stun:stun1.l.google.com:19302',
+        'stun:stun2.l.google.com:19302',
+        'stun:stun3.l.google.com:19302',
+        'stun:stun.services.mozilla.com',
+      ],
+    },
     {
       urls: 'turn:openrelay.metered.ca:80',
       username: 'openrelay',
@@ -57,7 +62,20 @@ const ICE_SERVERS = {
       username: 'openrelay',
       credential: 'openrelay',
     },
+    {
+      urls: 'turns:openrelay.metered.ca:443?transport=tcp',
+      username: 'openrelay',
+      credential: 'openrelay',
+    },
+    {
+      urls: 'turns:openrelay.metered.ca:443',
+      username: 'openrelay',
+      credential: 'openrelay',
+    },
   ],
+  iceTransportPolicy: 'all',
+  bundlePolicy: 'max-bundle',
+  rtcpMuxPolicy: 'require',
 };
 
 export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

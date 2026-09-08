@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useStories } from '../../context/StoryContext';
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
+import { storyService } from '../../services/storyService';
 import { Avatar } from '../common/Avatar';
 
 export const StoryViewerModal: React.FC = () => {
@@ -26,19 +27,27 @@ export const StoryViewerModal: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [showViewersList, setShowViewersList] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   const currentSlide = activeStoryGroup?.slides[activeSlideIndex];
   const isMyStory = activeStoryGroup?.userId === user?.id;
   const isLiked = currentSlide?.likes?.includes(user?.id || '');
 
+  // Record view on MongoDB Atlas when user views someone else's story
+  useEffect(() => {
+    if (user && currentSlide && !isMyStory) {
+      storyService.recordStoryView(currentSlide.id, user.id);
+    }
+  }, [user, currentSlide, isMyStory]);
+
   // Auto advance slide every 5 seconds unless paused or viewers modal is open
   useEffect(() => {
-    if (!isViewerOpen || isPaused || showViewersList || !currentSlide) return;
+    if (!isViewerOpen || isPaused || showViewersList || !currentSlide || showToast) return;
     const timer = setTimeout(() => {
       nextSlide();
     }, 5000);
     return () => clearTimeout(timer);
-  }, [isViewerOpen, isPaused, showViewersList, activeSlideIndex, activeStoryGroup, currentSlide, nextSlide]);
+  }, [isViewerOpen, isPaused, showViewersList, activeSlideIndex, activeStoryGroup, currentSlide, nextSlide, showToast]);
 
   if (!isViewerOpen || !activeStoryGroup || !currentSlide) return null;
 
@@ -62,7 +71,11 @@ export const StoryViewerModal: React.FC = () => {
       );
 
       setReplyText('');
-      closeStoryViewer();
+      setShowToast(true);
+      setTimeout(() => {
+        setShowToast(false);
+        closeStoryViewer();
+      }, 1800);
     } finally {
       setIsSending(false);
     }
@@ -71,6 +84,18 @@ export const StoryViewerModal: React.FC = () => {
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md">
+        {/* Toast Banner Notification when reply sent */}
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-6 z-50 bg-emerald-600 text-white font-bold text-xs px-5 py-2.5 rounded-full shadow-2xl flex items-center space-x-2 border border-emerald-400/30"
+          >
+            <span>✓ Message sent successfully!</span>
+          </motion.div>
+        )}
+
         {/* Backdrop dismiss */}
         <div className="absolute inset-0" onClick={closeStoryViewer} />
 
@@ -246,16 +271,36 @@ export const StoryViewerModal: React.FC = () => {
               </div>
 
               <div className="space-y-3 overflow-y-auto max-h-48">
-                <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-800/60">
-                  <div className="flex items-center space-x-3">
-                    <Avatar src={user?.avatar || ''} alt={user?.name || ''} size="sm" />
-                    <div>
-                      <p className="text-xs font-semibold text-white">{user?.name} (You)</p>
-                      <p className="text-[10px] text-zinc-400">Viewed just now</p>
+                {currentSlide.viewers && currentSlide.viewers.length > 0 ? (
+                  currentSlide.viewers.map((viewer: any, vIdx: number) => {
+                    const viewerLiked = currentSlide.likes?.includes(viewer.userId);
+                    return (
+                      <div key={vIdx} className="flex items-center justify-between p-2 rounded-xl bg-zinc-800/60">
+                        <div className="flex items-center space-x-3">
+                          <Avatar src={viewer.avatar || ''} alt={viewer.name || 'Viewer'} size="sm" />
+                          <div>
+                            <p className="text-xs font-semibold text-white">
+                              {viewer.name} {viewer.userId === user?.id ? '(You)' : ''}
+                            </p>
+                            <p className="text-[10px] text-zinc-400">Viewed story</p>
+                          </div>
+                        </div>
+                        {viewerLiked && <Heart className="w-4 h-4 text-rose-500 fill-current" />}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-800/60">
+                    <div className="flex items-center space-x-3">
+                      <Avatar src={user?.avatar || ''} alt={user?.name || ''} size="sm" />
+                      <div>
+                        <p className="text-xs font-semibold text-white">{user?.name} (You)</p>
+                        <p className="text-[10px] text-zinc-400">Viewed just now</p>
+                      </div>
                     </div>
+                    {isLiked && <Heart className="w-4 h-4 text-rose-500 fill-current" />}
                   </div>
-                  {isLiked && <Heart className="w-4 h-4 text-rose-500 fill-current" />}
-                </div>
+                )}
 
                 {currentSlide.likes && currentSlide.likes.length > 0 && (
                   <div className="text-[11px] text-rose-400 font-semibold pt-1">

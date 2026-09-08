@@ -9,6 +9,7 @@ export interface IStory extends Document {
   type: 'image' | 'video';
   viewsCount: number;
   likes: string[];
+  viewers: { userId: string; name: string; avatar?: string; viewedAt: Date }[];
   createdAt: Date;
 }
 
@@ -22,6 +23,14 @@ const StorySchema = new Schema(
     type: { type: String, enum: ['image', 'video'], default: 'image' },
     viewsCount: { type: Number, default: 1 },
     likes: [{ type: String }],
+    viewers: [
+      {
+        userId: { type: String },
+        name: { type: String },
+        avatar: { type: String },
+        viewedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );

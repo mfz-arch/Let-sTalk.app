@@ -82,6 +82,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (isMounted) {
         setMessages(msgs);
         setIsLoadingMessages(false);
+        if (user) {
+          chatService.markAsRead(activeConversation.id, user.id);
+        }
       }
     });
 
@@ -91,7 +94,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const latestMsgs = await chatService.getMessages(activeConversation.id);
       if (isMounted && latestMsgs) {
         setMessages((prev) => {
-          if (latestMsgs.length !== prev.length || latestMsgs[latestMsgs.length - 1]?.id !== prev[prev.length - 1]?.id) {
+          if (
+            latestMsgs.length !== prev.length ||
+            latestMsgs[latestMsgs.length - 1]?.id !== prev[prev.length - 1]?.id ||
+            latestMsgs.some((lm, idx) => prev[idx] && prev[idx].status !== lm.status)
+          ) {
             return latestMsgs;
           }
           return prev;
@@ -103,7 +110,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isMounted = false;
       clearInterval(messageInterval);
     };
-  }, [activeConversation]);
+  }, [activeConversation, user]);
 
   // Listen for real-time incoming messages
   useEffect(() => {
@@ -195,9 +202,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const markAsRead = async (conversationId: string) => {
-    await chatService.markAsRead(conversationId);
+    if (!user) return;
+    await chatService.markAsRead(conversationId, user.id);
     setConversations((prev) =>
       prev.map((c) => (c.id === conversationId ? { ...c, unreadCount: 0 } : c))
+    );
+    setMessages((prev) =>
+      prev.map((m) => (m.conversationId === conversationId && m.receiverId === user.id ? { ...m, status: 'read' } : m))
     );
   };
 

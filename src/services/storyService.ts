@@ -80,6 +80,23 @@ class StoryService {
       console.error('markStorySeen error:', err);
     }
   }
+
+  async recordStoryView(storyId: string, userId: string): Promise<void> {
+    if (!storyId || !userId) return;
+    try {
+      await fetch('/api/stories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'view',
+          storyId,
+          userId,
+        }),
+      });
+    } catch (err) {
+      console.error('recordStoryView error:', err);
+    }
+  }
 }
 
 export const storyService = new StoryService();

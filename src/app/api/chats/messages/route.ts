@@ -82,3 +82,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: error.message || 'Error sending message' }, { status: 500 });
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    await connectDB();
+    const { conversationId, userId } = await request.json();
+
+    if (!conversationId || !userId) {
+      return NextResponse.json({ message: 'ConversationId and userId required' }, { status: 400 });
+    }
+
+    // Mark all unread messages for this recipient as 'read'
+    await Message.updateMany(
+      { conversationId, receiverId: userId, status: { $ne: 'read' } },
+      { $set: { status: 'read' } }
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Mark Read API Error:', error);
+    return NextResponse.json({ message: error.message || 'Error marking messages read' }, { status: 500 });
+  }
+}

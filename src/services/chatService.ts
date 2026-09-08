@@ -90,8 +90,17 @@ class ChatService {
     }
   }
 
-  async markAsRead(conversationId: string): Promise<void> {
-    // No-op for now
+  async markAsRead(conversationId: string, userId?: string): Promise<void> {
+    if (!conversationId || !userId) return;
+    try {
+      await fetch('/api/chats/messages', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId, userId }),
+      });
+    } catch (err) {
+      console.error('markAsRead error:', err);
+    }
   }
 }
 

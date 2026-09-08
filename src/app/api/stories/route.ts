@@ -34,9 +34,10 @@ export async function GET() {
         caption: story.caption,
         type: story.type,
         createdAt: story.createdAt.toISOString(),
-        viewsCount: story.viewsCount || 1,
+        viewsCount: story.viewers?.length || story.viewsCount || 1,
         likesCount: story.likes?.length || 0,
         likes: story.likes || [],
+        viewers: story.viewers || [],
       });
     }
 
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
         type: 'image',
         viewsCount: 1,
         likes: [],
+        viewers: [{ userId: user._id.toString(), name: user.name, avatar: user.avatar || '', viewedAt: new Date() }],
       });
 
       return NextResponse.json({ success: true, story: newStory });
@@ -95,6 +97,31 @@ export async function POST(request: Request) {
         }
         await story.save();
         return NextResponse.json({ success: true, likes: story.likes, likesCount: story.likes.length });
+      }
+      return NextResponse.json({ message: 'Story not found' }, { status: 404 });
+    }
+
+    // 3. RECORD STORY VIEW
+    if (action === 'view') {
+      if (!storyId || !userId) {
+        return NextResponse.json({ message: 'Story ID and User ID required' }, { status: 400 });
+      }
+
+      const story = await Story.findById(storyId);
+      if (story) {
+        const user = await User.findById(userId);
+        const alreadyViewed = story.viewers?.some((v: any) => v.userId === userId);
+        if (!alreadyViewed && user) {
+          story.viewers.push({
+            userId,
+            name: user.name,
+            avatar: user.avatar || '',
+            viewedAt: new Date(),
+          });
+          story.viewsCount = story.viewers.length;
+          await story.save();
+        }
+        return NextResponse.json({ success: true, viewers: story.viewers, viewsCount: story.viewsCount });
       }
       return NextResponse.json({ message: 'Story not found' }, { status: 404 });
     }

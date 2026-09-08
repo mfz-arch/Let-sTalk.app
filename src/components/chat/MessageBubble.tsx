@@ -225,11 +225,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMe, onR
                 {isMe && (
                   <span>
                     {message.status === 'read' ? (
-                      <CheckCheck className="w-3.5 h-3.5 text-cyan-300 inline" />
+                      <CheckCheck className="w-3.5 h-3.5 text-sky-400 font-extrabold drop-shadow-sm inline" />
                     ) : message.status === 'delivered' ? (
-                      <CheckCheck className="w-3.5 h-3.5 text-indigo-200 inline" />
+                      <CheckCheck className="w-3.5 h-3.5 text-indigo-200/80 inline" />
                     ) : (
-                      <Check className="w-3.5 h-3.5 text-indigo-200 inline" />
+                      <Check className="w-3.5 h-3.5 text-indigo-200/80 inline" />
                     )}
                   </span>
                 )}
