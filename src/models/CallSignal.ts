@@ -34,5 +34,7 @@ const CallSignalSchema = new Schema(
 
 // Auto expire call signals after 3 minutes
 CallSignalSchema.index({ createdAt: 1 }, { expireAfterSeconds: 180 });
+CallSignalSchema.index({ receiverId: 1, status: 1 });
+CallSignalSchema.index({ callerId: 1, status: 1 });
 
 export const CallSignal = models.CallSignal || model<ICallSignal>('CallSignal', CallSignalSchema);

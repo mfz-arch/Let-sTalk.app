@@ -41,6 +41,42 @@ export const setupChatSocket = (io: SocketIOServer): void => {
       io.to(data.conversationId).emit('messages_read', data);
     });
 
+    // --- WEBRTC CALL SIGNALING EVENTS ---
+    socket.on('call_user', (data: { targetUserId: string; call: any }) => {
+      const targetSocketId = onlineUsers.get(data.targetUserId);
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('incoming_call', data.call);
+      }
+    });
+
+    socket.on('accept_call', (data: { targetUserId: string; callId: string; answer: any }) => {
+      const targetSocketId = onlineUsers.get(data.targetUserId);
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('call_accepted', data);
+      }
+    });
+
+    socket.on('decline_call', (data: { targetUserId: string; callId: string }) => {
+      const targetSocketId = onlineUsers.get(data.targetUserId);
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('call_declined', data);
+      }
+    });
+
+    socket.on('end_call', (data: { targetUserId: string; callId: string }) => {
+      const targetSocketId = onlineUsers.get(data.targetUserId);
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('call_ended', data);
+      }
+    });
+
+    socket.on('send_ice_candidate', (data: { targetUserId: string; candidate: any; callId: string }) => {
+      const targetSocketId = onlineUsers.get(data.targetUserId);
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('receive_ice_candidate', data);
+      }
+    });
+
     // Disconnect event
     socket.on('disconnect', () => {
       let disconnectedUserId: string | null = null;

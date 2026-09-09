@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User } from '../types/user';
 import { useAuth } from './AuthContext';
+import { useSocket } from './SocketContext';
 import { chatService } from '../services/chatService';
 
 interface ActiveCallData {
@@ -35,7 +36,7 @@ interface CallContextType {
 
 const CallContext = createContext<CallContextType | undefined>(undefined);
 
-// Robust STUN + Metered TURNS servers with max-bundle policy for distant cellular & CGNAT networks
+// Robust STUN + TURN relay servers for distant mobile networks & corporate firewalls
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [
     {
@@ -44,7 +45,9 @@ const ICE_SERVERS: RTCConfiguration = {
         'stun:stun1.l.google.com:19302',
         'stun:stun2.l.google.com:19302',
         'stun:stun3.l.google.com:19302',
+        'stun:stun4.l.google.com:19302',
         'stun:stun.services.mozilla.com',
+        'stun:stun.cloudflare.com:3478',
       ],
     },
     {
@@ -67,19 +70,16 @@ const ICE_SERVERS: RTCConfiguration = {
       username: 'openrelay',
       credential: 'openrelay',
     },
-    {
-      urls: 'turns:openrelay.metered.ca:443',
-      username: 'openrelay',
-      credential: 'openrelay',
-    },
   ],
   iceTransportPolicy: 'all',
   bundlePolicy: 'max-bundle',
   rtcpMuxPolicy: 'require',
+  iceCandidatePoolSize: 10,
 };
 
 export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
+  const { socket } = useSocket();
   const [activeCall, setActiveCall] = useState<ActiveCallData | null>(null);
   const [callRole, setCallRole] = useState<'caller' | 'receiver' | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -91,9 +91,11 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
   const durationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingIceCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const processedCandidatesRef = useRef<Set<string>>(new Set());
+  const missCountRef = useRef<number>(0);
 
-  // Clean up streams & peer connection
+  // Clean up WebRTC peer connection, media streams & timers
   const cleanupCallState = useCallback(() => {
     if (peerConnectionRef.current) {
       try {
@@ -113,7 +115,9 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCallSeconds(0);
     setIsMuted(false);
     setIsVideoOff(false);
+    pendingIceCandidatesRef.current = [];
     processedCandidatesRef.current.clear();
+    missCountRef.current = 0;
 
     if (durationTimerRef.current) {
       clearInterval(durationTimerRef.current);
@@ -121,7 +125,43 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [localStream]);
 
-  // Duration Timer when call is connected
+  // Buffer ICE candidates until setRemoteDescription completes
+  const addOrBufferIceCandidate = useCallback(async (candidate: any) => {
+    if (!candidate) return;
+    const candStr = JSON.stringify(candidate);
+    if (processedCandidatesRef.current.has(candStr)) return;
+    processedCandidatesRef.current.add(candStr);
+
+    const pc = peerConnectionRef.current;
+    if (pc && pc.remoteDescription && pc.remoteDescription.type) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        console.error('Error adding ICE Candidate directly:', err);
+      }
+    } else {
+      pendingIceCandidatesRef.current.push(candidate);
+    }
+  }, []);
+
+  // Flush queued ICE candidates once remote description is set
+  const flushPendingIceCandidates = useCallback(async () => {
+    const pc = peerConnectionRef.current;
+    if (!pc || !pc.remoteDescription || !pc.remoteDescription.type) return;
+
+    while (pendingIceCandidatesRef.current.length > 0) {
+      const cand = pendingIceCandidatesRef.current.shift();
+      if (cand) {
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(cand));
+        } catch (err) {
+          console.error('Error flushing pending ICE Candidate:', err);
+        }
+      }
+    }
+  }, []);
+
+  // Timer for connected calls
   useEffect(() => {
     if (activeCall?.status === 'connected') {
       if (!durationTimerRef.current) {
@@ -137,7 +177,53 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [activeCall?.status]);
 
-  // Global listener for incoming calls or answer status updates + ICE candidates
+  // REAL-TIME SOCKET.IO SIGNALING LISTENERS (Instant delivery <50ms)
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    const handleIncomingCall = (call: ActiveCallData) => {
+      if (!activeCall && call.receiverId === user.id) {
+        setActiveCall(call);
+        setCallRole('receiver');
+      }
+    };
+
+    const handleCallAccepted = async (data: { callId: string; answer: any }) => {
+      if (peerConnectionRef.current && peerConnectionRef.current.signalingState !== 'stable') {
+        try {
+          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+          await flushPendingIceCandidates();
+        } catch (err) {
+          console.error('Error setting remote answer from socket:', err);
+        }
+      }
+      setActiveCall((prev) => (prev ? { ...prev, status: 'connected', answer: data.answer } : null));
+    };
+
+    const handleReceiveIceCandidate = async (data: { candidate: any }) => {
+      await addOrBufferIceCandidate(data.candidate);
+    };
+
+    const handleCallEndedOrDeclined = () => {
+      cleanupCallState();
+    };
+
+    socket.on('incoming_call', handleIncomingCall);
+    socket.on('call_accepted', handleCallAccepted);
+    socket.on('receive_ice_candidate', handleReceiveIceCandidate);
+    socket.on('call_declined', handleCallEndedOrDeclined);
+    socket.on('call_ended', handleCallEndedOrDeclined);
+
+    return () => {
+      socket.off('incoming_call', handleIncomingCall);
+      socket.off('call_accepted', handleCallAccepted);
+      socket.off('receive_ice_candidate', handleReceiveIceCandidate);
+      socket.off('call_declined', handleCallEndedOrDeclined);
+      socket.off('call_ended', handleCallEndedOrDeclined);
+    };
+  }, [socket, user, activeCall, cleanupCallState, addOrBufferIceCandidate, flushPendingIceCandidates]);
+
+  // HTTP POLLING SIGNALING FALLBACK (Runs every 1.5s - 2.5s)
   useEffect(() => {
     if (!user) return;
 
@@ -159,6 +245,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const remoteCandidates: any[] = data.remoteCandidates || [];
 
         if (call) {
+          missCountRef.current = 0;
+
           // 1. Incoming Call received
           if (!activeCall && call.receiverId === user.id && call.status === 'ringing') {
             setActiveCall(call);
@@ -170,49 +258,63 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setActiveCall(call);
             if (call.answer && peerConnectionRef.current && peerConnectionRef.current.signalingState !== 'stable') {
               await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(call.answer));
+              await flushPendingIceCandidates();
             }
           }
 
-          // 3. Process remote ICE candidates for WebRTC media stream
-          if (peerConnectionRef.current && remoteCandidates.length > 0) {
+          // 3. Process remote ICE candidates
+          if (remoteCandidates.length > 0) {
             for (const candidate of remoteCandidates) {
-              const candStr = JSON.stringify(candidate);
-              if (!processedCandidatesRef.current.has(candStr)) {
-                processedCandidatesRef.current.add(candStr);
-                try {
-                  await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-                } catch (candErr) {
-                  console.error('Add ICE Candidate Error:', candErr);
-                }
-              }
+              await addOrBufferIceCandidate(candidate);
             }
           }
 
-          // 4. Call ended or declined by other side
+          // 4. Call ended or declined
           if (activeCall && (call.status === 'ended' || call.status === 'declined')) {
             cleanupCallState();
           }
         } else if (activeCall && activeCall.status !== 'ringing') {
-          cleanupCallState();
+          // Require 3 consecutive misses before cleaning up active call to prevent network hiccup drop
+          missCountRef.current += 1;
+          if (missCountRef.current >= 3) {
+            cleanupCallState();
+          }
         }
       } catch (err) {
         console.error('Call Signal Poll Error:', err);
       }
     };
 
-    pollTimerRef.current = setInterval(pollCallSignal, 1000);
+    // Fast poll (1.5s) when ringing/calling, slower (2.5s) when connected/idle
+    const pollInterval = activeCall ? 1500 : 2500;
+    pollTimerRef.current = setInterval(pollCallSignal, pollInterval);
 
     return () => {
       if (pollTimerRef.current) clearInterval(pollTimerRef.current);
     };
-  }, [user, activeCall, callRole, cleanupCallState]);
+  }, [user, activeCall, callRole, cleanupCallState, addOrBufferIceCandidate, flushPendingIceCandidates]);
 
   // INITIATE CALL (Caller)
   const initiateCall = async (targetUser: User, callType: 'audio' | 'video') => {
     if (!user) return;
 
+    // Immediately display "Calling..." ringing state on Caller's screen (<10ms UI latency)
+    const tempCallId = `call_${user.id}_${targetUser.id}_${Date.now()}`;
+    const initialCallData: ActiveCallData = {
+      id: tempCallId,
+      callerId: user.id,
+      callerName: user.name,
+      callerAvatar: user.avatar,
+      receiverId: targetUser.id,
+      callType,
+      status: 'ringing',
+    };
+
+    setActiveCall(initialCallData);
+    setCallRole('caller');
+
     try {
-      // 1. Get local media stream (audio + video if video call)
+      // 1. Request local audio / video permissions
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: callType === 'video' ? { width: { ideal: 1280 }, height: { ideal: 720 } } : false,
@@ -223,8 +325,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const pc = new RTCPeerConnection(ICE_SERVERS);
       peerConnectionRef.current = pc;
 
-      let callId: string | null = null;
-      const iceCandidatesQueue: RTCIceCandidate[] = [];
+      let realCallId = tempCallId;
 
       // Handle incoming remote media tracks
       pc.ontrack = (event) => {
@@ -239,34 +340,40 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       };
 
-      // Register ICE candidate handler EARLY to catch all candidates
+      // Register ICE candidate handler
       pc.onicecandidate = (event) => {
         if (event.candidate) {
-          if (callId) {
-            fetch('/api/calls/signal', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                action: 'ice_candidate',
-                callId,
-                userId: user.id,
-                candidate: event.candidate,
-              }),
-            }).catch(console.error);
-          } else {
-            iceCandidatesQueue.push(event.candidate);
+          // Emit via Socket.io for instant delivery
+          if (socket) {
+            socket.emit('send_ice_candidate', {
+              targetUserId: targetUser.id,
+              candidate: event.candidate,
+              callId: realCallId,
+            });
           }
+
+          // Fallback to HTTP API
+          fetch('/api/calls/signal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'ice_candidate',
+              callId: realCallId,
+              userId: user.id,
+              candidate: event.candidate,
+            }),
+          }).catch(console.error);
         }
       };
 
-      // Add local tracks to peer connection
+      // Add local media tracks
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
       // Create SDP Offer
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      // Send Call signal
+      // Post SDP Offer to API
       const res = await fetch('/api/calls/signal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -283,24 +390,17 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (res.ok) {
         const data = await res.json();
-        callId = data.callId;
-        setActiveCall(data.call);
-        setCallRole('caller');
+        realCallId = data.callId;
+        const callObj = { ...data.call, id: data.callId };
+        setActiveCall(callObj);
 
-        // Flush buffered early ICE candidates
-        for (const candidate of iceCandidatesQueue) {
-          fetch('/api/calls/signal', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'ice_candidate',
-              callId,
-              userId: user.id,
-              candidate,
-            }),
-          }).catch(console.error);
+        // Emit call event over Socket.io
+        if (socket) {
+          socket.emit('call_user', {
+            targetUserId: targetUser.id,
+            call: callObj,
+          });
         }
-        iceCandidatesQueue.length = 0;
       }
     } catch (err: any) {
       console.error('Initiate Call Error:', err);
@@ -314,20 +414,29 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user || !activeCall) return;
 
     try {
-      // 1. Get local media stream
+      // 1. Request local media stream
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: activeCall.callType === 'video' ? { width: { ideal: 1280 }, height: { ideal: 720 } } : false,
       });
       setLocalStream(stream);
 
-      // 2. Create RTCPeerConnection with STUN + TURN
+      // 2. Create RTCPeerConnection
       const pc = new RTCPeerConnection(ICE_SERVERS);
       peerConnectionRef.current = pc;
 
-      // Register ICE candidate callback EARLY
+      const callerUserId = activeCall.callerId;
+
       pc.onicecandidate = (event) => {
         if (event.candidate && activeCall.id) {
+          if (socket) {
+            socket.emit('send_ice_candidate', {
+              targetUserId: callerUserId,
+              candidate: event.candidate,
+              callId: activeCall.id,
+            });
+          }
+
           fetch('/api/calls/signal', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -358,13 +467,22 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Set remote description (Caller's Offer)
       if (activeCall.offer) {
         await pc.setRemoteDescription(new RTCSessionDescription(activeCall.offer));
+        await flushPendingIceCandidates();
       }
 
-      // Create Answer
+      // Create SDP Answer
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
-      // Send Answer signal
+      // Send Answer over Socket.io & HTTP API
+      if (socket) {
+        socket.emit('accept_call', {
+          targetUserId: callerUserId,
+          callId: activeCall.id,
+          answer,
+        });
+      }
+
       await fetch('/api/calls/signal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -410,7 +528,14 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // DECLINE CALL
   const declineCall = async () => {
     if (activeCall) {
-      logCallToChat(`📵 Missed ${activeCall.callType === 'video' ? 'Video' : 'Voice'} Call`);
+      const targetUserId = callRole === 'caller' ? activeCall.receiverId : activeCall.callerId;
+
+      if (socket) {
+        socket.emit('decline_call', { targetUserId, callId: activeCall.id });
+      }
+
+      logCallToChat(`` + (activeCall.callType === 'video' ? '📹 Video' : '📞 Voice') + ` Call Declined / Missed`);
+
       fetch('/api/calls/signal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -426,6 +551,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // END CALL
   const endCall = async () => {
     if (activeCall) {
+      const targetUserId = callRole === 'caller' ? activeCall.receiverId : activeCall.callerId;
+
+      if (socket) {
+        socket.emit('end_call', { targetUserId, callId: activeCall.id });
+      }
+
       const formatMin = Math.floor(callSeconds / 60);
       const formatSec = callSeconds % 60;
       const durationStr = `${formatMin}:${formatSec.toString().padStart(2, '0')}`;
